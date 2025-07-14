@@ -82,7 +82,7 @@ const LoginPage = () => {
         <p className="text-center text-gray-400 mt-8">
           Have an account?{" "}
           <a
-            href="/src/app/login/page.js"
+            href="/login"
             className="text-blue-300 hover:text-white font-bold transition-colors"
           >
             Sign In

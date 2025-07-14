@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import React, { useState } from "react";
 import { Eye, EyeOff, Github, Chrome } from "lucide-react";
 
@@ -45,15 +46,9 @@ const LoginPage = () => {
   return (
     <div className="w-full max-w-md mx-auto z-10">
       <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-8 m-4">
-        <div className="flex justify-center mb-4">
-          <img
-            src="https://i.postimg.cc/bwHVDRZ7/PC-background-wallpaper.jpg" // <-- Replace this with your actual image path or URL
-            alt="Flake AI Logo"
-            className="h-16 w-auto"
-          />
-        </div>
+        <div className="flex justify-center mb-4"></div>
         <h2 className="text-white text-2xl font-semibold text-center mb-8">
-          Flake ai
+          Flake AI
         </h2>
 
         <div>
@@ -107,7 +102,7 @@ const LoginPage = () => {
         <p className="text-center text-gray-400 mt-8">
           Do not have an account?{" "}
           <a
-            href="#"
+            href="/register"
             className="text-blue-300 hover:text-white font-bold transition-colors"
           >
             Register for free

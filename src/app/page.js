@@ -11,7 +11,7 @@ export default function Home() {
       if (session) router.push("/dashboard");
       else router.push("/login");
     });
-  }, []);
+  });
 
   return <div className="p-4">Loading...</div>;
 }
