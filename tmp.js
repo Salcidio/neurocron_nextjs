@@ -1,242 +1,369 @@
-"use client";
-import React, { useState } from "react";
-import { Eye, EyeOff, Github } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { supabase } from '@/lib/supabaseClient'
+'use client';
+import React, { useState, useEffect } from 'react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
+import { TrendingUp, Users, DollarSign, Activity, Bell, Search, Settings, Menu, X, Zap, Eye, Globe, Heart } from 'lucide-react';
 
+const Dashboard = () => {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [animatedValue, setAnimatedValue] = useState(0);
+  const [currentTime, setCurrentTime] = useState(new Date());
 
-export default function App() {
-  return (
-    <div
-      className="bg-gradient-to-br from-blue-700 to-blue-900 min-h-screen flex items-center justify-center font-sans relative overflow-hidden bg-cover bg-center bg-no-repeat"
-      style={{
-        backgroundImage:
-          "url('https://i.postimg.cc/bwHVDRZ7/PC-background-wallpaper.jpg')",
-      }}
-    >
-      <BackgroundShapes />
-      <LoginPage />
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    const valueTimer = setInterval(() => {
+      setAnimatedValue(prev => (prev + 1) % 100);
+    }, 50);
+    return () => {
+      clearInterval(timer);
+      clearInterval(valueTimer);
+    };
+  }, []);
+
+  const salesData = [
+    { name: 'Jan', value: 4000, growth: 240 },
+    { name: 'Feb', value: 3000, growth: 456 },
+    { name: 'Mar', value: 2000, growth: 139 },
+    { name: 'Apr', value: 2780, growth: 980 },
+    { name: 'May', value: 1890, growth: 800 },
+    { name: 'Jun', value: 2390, growth: 380 },
+  ];
+
+  const pieData = [
+    { name: 'Desktop', value: 45, color: '#8B5CF6' },
+    { name: 'Mobile', value: 35, color: '#06B6D4' },
+    { name: 'Tablet', value: 20, color: '#10B981' },
+  ];
+
+  const StatCard = ({ icon: Icon, title, value, change, color }) => (
+    <div className="group relative bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-2xl p-6 hover:border-purple-500/50 transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/10 hover:scale-105">
+      <div className="absolute inset-0 bg-gradient-to-br from-purple-600/5 to-cyan-600/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      
+      <div className="relative flex items-center justify-between">
+        <div>
+          <p className="text-gray-400 text-sm font-medium">{title}</p>
+          <p className="text-2xl font-bold text-white mt-1">{value}</p>
+          <p className={`text-sm mt-1 ${change > 0 ? 'text-green-400' : 'text-red-400'}`}>
+            {change > 0 ? '+' : ''}{change}% from last month
+          </p>
+        </div>
+        <div className={`p-3 rounded-xl bg-gradient-to-r ${color} shadow-lg`}>
+          <Icon className="w-6 h-6 text-white" />
+        </div>
+      </div>
     </div>
   );
-}
 
-const BackgroundShapes = () => (
-  <>
-    <div className="absolute top-[-50px] left-[-50px] w-48 h-48 bg-blue-500/30 rounded-full filter blur-3xl"></div>
-    <div className="absolute bottom-[-50px] right-[-50px] w-72 h-72 bg-blue-400/30 rounded-full filter blur-3xl"></div>
-    <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-indigo-500/20 rounded-full filter blur-2xl animate-pulse"></div>
-    <div className="absolute bottom-1/3 right-1/4 w-40 h-40 bg-indigo-400/20 rounded-full filter blur-2xl animate-pulse delay-500"></div>
-  </>
-);
-
-const LoginPage = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [passwordVisible, setPasswordVisible] = useState(false);
-  const router = useRouter();
-
-  const togglePasswordVisibility = () => {
-    setPasswordVisible(!passwordVisible);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError(null);
-    setLoading(true);
-
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        setError(error.message);
-      } else {
-        router.push("/dashboard");
-        router.refresh();
-      }
-    } catch (err) {
-      setError("An unexpected error occurred");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSocialLogin = async (provider) => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider,
-      });
-      if (error) setError(error.message);
-    } catch (err) {
-      setError("An unexpected error occurred");
-    }
-  };
+  const ActivityItem = ({ title, time, type }) => (
+    <div className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-800/50 transition-colors duration-200">
+      <div className={`w-2 h-2 rounded-full ${type === 'success' ? 'bg-green-400' : type === 'warning' ? 'bg-yellow-400' : 'bg-blue-400'}`} />
+      <div className="flex-1">
+        <p className="text-white text-sm">{title}</p>
+        <p className="text-gray-400 text-xs">{time}</p>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="w-full max-w-md mx-auto z-10">
-      <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-8 m-4">
-        <div className="flex justify-center mb-4"></div>
-        <h2 className="text-white text-2xl font-semibold text-center mb-8">
-          Flake AI
-        </h2>
-
-        {error && (
-          <div className="bg-red-500/10 border border-red-500 text-red-500 px-4 py-2 rounded-lg mb-6">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit}>
-          <InputField
-            label="Email"
-            type="email"
-            placeholder="username@gmail.com"
-            id="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-          <div className="relative">
-            <InputField
-              label="Password"
-              type={passwordVisible ? "text" : "password"}
-              placeholder="Password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-            <button
-              type="button"
-              onClick={togglePasswordVisibility}
-              className="absolute inset-y-0 right-0 top-7 flex items-center px-4 text-gray-400 hover:text-white"
-            >
-              {passwordVisible ? <EyeOff size={20} /> : <Eye size={20} />}
-            </button>
-          </div>
-
-          <div className="text-right mb-6">
-            <a
-              href="#"
-              className="text-sm text-blue-300 hover:text-white transition-colors"
-            >
-              Forgot Password?
-            </a>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? "Signing in..." : "Sign In"}
-          </button>
-        </form>
-
-        <div className="text-center text-gray-400 my-6">or continue with</div>
-
-        <div className="flex justify-center space-x-4">
-          <SocialLoginButton
-            icon={<GoogleIcon />}
-            onClick={() => handleSocialLogin("google")}
-          />
-          <SocialLoginButton
-            icon={<Github size={24} />}
-            onClick={() => handleSocialLogin("github")}
-          />
-          <SocialLoginButton
-            icon={<AppleIcon />}
-            onClick={() => handleSocialLogin("apple")}
-          />
-        </div>
-
-        <p className="text-center text-gray-400 mt-8">
-          Do not have an account?{" "}
-          <a
-            href="/register"
-            className="text-blue-300 hover:text-white font-bold transition-colors"
-          >
-            Register for free
-          </a>
-        </p>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
+      {/* Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-pink-500/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '4s' }} />
       </div>
+
+      {/* Sidebar */}
+      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-gray-900/95 backdrop-blur-lg border-r border-gray-800 transform transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
+        <div className="p-6">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-lg flex items-center justify-center">
+              <Zap className="w-5 h-5 text-white" />
+            </div>
+            <h1 className="text-xl font-bold">NexaDash</h1>
+          </div>
+        </div>
+        
+        <nav className="mt-8 px-4">
+          {[
+            { name: 'Dashboard', icon: BarChart, active: true },
+            { name: 'Analytics', icon: TrendingUp },
+            { name: 'Users', icon: Users },
+            { name: 'Revenue', icon: DollarSign },
+            { name: 'Performance', icon: Activity },
+            { name: 'Settings', icon: Settings },
+          ].map((item) => (
+            <a
+              key={item.name}
+              href="#"
+              className={`flex items-center space-x-3 px-4 py-3 rounded-lg mb-2 transition-all duration-200 ${
+                item.active
+                  ? 'bg-gradient-to-r from-purple-600 to-cyan-600 text-white shadow-lg'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
+              }`}
+            >
+              <item.icon className="w-5 h-5" />
+              <span className="font-medium">{item.name}</span>
+            </a>
+          ))}
+        </nav>
+      </div>
+
+      {/* Main Content */}
+      <div className="lg:ml-64 relative">
+        {/* Header */}
+        <header className="bg-gray-900/80 backdrop-blur-lg border-b border-gray-800 sticky top-0 z-40">
+          <div className="flex items-center justify-between px-6 py-4">
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="lg:hidden p-2 rounded-lg hover:bg-gray-800 transition-colors"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
+                Welcome back, Alex! 👋
+              </h2>
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  className="bg-gray-800/50 border border-gray-700 rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:border-purple-500 transition-colors"
+                />
+              </div>
+              <button className="relative p-2 rounded-lg hover:bg-gray-800 transition-colors">
+                <Bell className="w-5 h-5" />
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse" />
+              </button>
+              <div className="text-right">
+                <p className="text-sm text-gray-400">
+                  {currentTime.toLocaleDateString()}
+                </p>
+                <p className="text-sm font-medium">
+                  {currentTime.toLocaleTimeString()}
+                </p>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Dashboard Content */}
+        <main className="p-6">
+          {/* Stats Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <StatCard
+              icon={Users}
+              title="Total Users"
+              value="24,567"
+              change={12.5}
+              color="from-purple-500 to-purple-600"
+            />
+            <StatCard
+              icon={DollarSign}
+              title="Revenue"
+              value="$89,432"
+              change={8.2}
+              color="from-green-500 to-green-600"
+            />
+            <StatCard
+              icon={Eye}
+              title="Page Views"
+              value="1,234,567"
+              change={-2.4}
+              color="from-blue-500 to-blue-600"
+            />
+            <StatCard
+              icon={Globe}
+              title="Sessions"
+              value="45,123"
+              change={15.8}
+              color="from-pink-500 to-pink-600"
+            />
+          </div>
+
+          {/* Charts Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            {/* Revenue Chart */}
+            <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-2xl p-6 hover:border-purple-500/30 transition-all duration-300">
+              <h3 className="text-lg font-semibold mb-4 flex items-center">
+                <TrendingUp className="w-5 h-5 mr-2 text-purple-400" />
+                Revenue Trends
+              </h3>
+              <ResponsiveContainer width="100%" height={250}>
+                <LineChart data={salesData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <XAxis dataKey="name" stroke="#9CA3AF" />
+                  <YAxis stroke="#9CA3AF" />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#1F2937', 
+                      border: '1px solid #374151',
+                      borderRadius: '8px'
+                    }} 
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="value" 
+                    stroke="url(#gradient)" 
+                    strokeWidth={3}
+                    dot={{ fill: '#8B5CF6', strokeWidth: 2 }}
+                  />
+                  <defs>
+                    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#8B5CF6" />
+                      <stop offset="100%" stopColor="#06B6D4" />
+                    </linearGradient>
+                  </defs>
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Device Usage */}
+            <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-2xl p-6 hover:border-cyan-500/30 transition-all duration-300">
+              <h3 className="text-lg font-semibold mb-4 flex items-center">
+                <Activity className="w-5 h-5 mr-2 text-cyan-400" />
+                Device Usage
+              </h3>
+              <ResponsiveContainer width="100%" height={250}>
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {pieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="flex justify-center space-x-6 mt-4">
+                {pieData.map((entry, index) => (
+                  <div key={index} className="flex items-center space-x-2">
+                    <div className={`w-3 h-3 rounded-full`} style={{ backgroundColor: entry.color }} />
+                    <span className="text-sm text-gray-400">{entry.name}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Performance Metrics */}
+            <div className="lg:col-span-2 bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-2xl p-6 hover:border-green-500/30 transition-all duration-300">
+              <h3 className="text-lg font-semibold mb-4 flex items-center">
+                <BarChart className="w-5 h-5 mr-2 text-green-400" />
+                Performance Metrics
+              </h3>
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={salesData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <XAxis dataKey="name" stroke="#9CA3AF" />
+                  <YAxis stroke="#9CA3AF" />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#1F2937', 
+                      border: '1px solid #374151',
+                      borderRadius: '8px'
+                    }} 
+                  />
+                  <Bar dataKey="growth" fill="url(#barGradient)" radius={[4, 4, 0, 0]} />
+                  <defs>
+                    <linearGradient id="barGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#10B981" />
+                      <stop offset="100%" stopColor="#059669" />
+                    </linearGradient>
+                  </defs>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Recent Activity */}
+            <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-2xl p-6 hover:border-pink-500/30 transition-all duration-300">
+              <h3 className="text-lg font-semibold mb-4 flex items-center">
+                <Heart className="w-5 h-5 mr-2 text-pink-400" />
+                Recent Activity
+              </h3>
+              <div className="space-y-2">
+                <ActivityItem
+                  title="New user registration"
+                  time="2 minutes ago"
+                  type="success"
+                />
+                <ActivityItem
+                  title="Payment processed"
+                  time="5 minutes ago"
+                  type="success"
+                />
+                <ActivityItem
+                  title="Server response time high"
+                  time="12 minutes ago"
+                  type="warning"
+                />
+                <ActivityItem
+                  title="Database backup completed"
+                  time="1 hour ago"
+                  type="info"
+                />
+                <ActivityItem
+                  title="New feature deployed"
+                  time="2 hours ago"
+                  type="success"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Animated Progress Bar */}
+          <div className="mt-8 bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-2xl p-6">
+            <h3 className="text-lg font-semibold mb-4">System Performance</h3>
+            <div className="space-y-4">
+              <div>
+                <div className="flex justify-between text-sm mb-2">
+                  <span>CPU Usage</span>
+                  <span>{animatedValue}%</span>
+                </div>
+                <div className="w-full bg-gray-700 rounded-full h-2">
+                  <div 
+                    className="bg-gradient-to-r from-purple-500 to-cyan-500 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${animatedValue}%` }}
+                  />
+                </div>
+              </div>
+              <div>
+                <div className="flex justify-between text-sm mb-2">
+                  <span>Memory Usage</span>
+                  <span>{Math.max(20, animatedValue - 20)}%</span>
+                </div>
+                <div className="w-full bg-gray-700 rounded-full h-2">
+                  <div 
+                    className="bg-gradient-to-r from-green-500 to-blue-500 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${Math.max(20, animatedValue - 20)}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
     </div>
   );
 };
 
-const InputField = ({
-  label,
-  type,
-  placeholder,
-  id,
-  value,
-  onChange,
-  required,
-}) => (
-  <div className="mb-4">
-    <label htmlFor={id} className="block text-white text-sm font-medium mb-2">
-      {label}
-    </label>
-    <input
-      type={type}
-      id={id}
-      value={value}
-      onChange={onChange}
-      placeholder={placeholder}
-      required={required}
-      className="w-full bg-white/20 border border-white/30 text-white placeholder-gray-300 rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all"
-    />
-  </div>
-);
-
-const SocialLoginButton = ({ icon, onClick }) => (
-  <button
-    type="button"
-    onClick={onClick}
-    className="flex items-center justify-center w-16 h-12 bg-white/10 border border-white/30 rounded-lg text-white hover:bg-white/20 transition-colors"
-  >
-    {icon}
-  </button>
-);
-
-const GoogleIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 48 48"
-  >
-    <path
-      fill="#FFC107"
-      d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C12.955 4 4 12.955 4 24s8.955 20 20 20s20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"
-    />
-    <path
-      fill="#FF3D00"
-      d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C16.318 4 9.656 8.337 6.306 14.691z"
-    />
-    <path
-      fill="#4CAF50"
-      d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238C29.211 35.091 26.715 36 24 36c-5.222 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"
-    />
-    <path
-      fill="#1976D2"
-      d="M43.611 20.083H42V20H24v8h11.303c-.792 2.237-2.231 4.166-4.087 5.571l6.19 5.238C42.012 35.245 44 30.028 44 24c0-1.341-.138-2.65-.389-3.917z"
-    />
-  </svg>
-);
-
-const AppleIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="currentColor"
-  >
-    <path d="M12.01,2.07c-2.31,0-4.23,1.52-5.2,3.62c-1.7,0.07-3.4,0.85-4.63,2.27c-1.54,1.78-1.74,4.39-0.5,6.58 c0.93,1.65,2.54,2.64,4.27,2.64c0.55,0,1.1-0.1,1.6-0.29c1.2,1.83,3.23,2.9,5.46,2.89c2.23-0.01,4.26-1.08,5.46-2.89 c0.5,0.19,1.05,0.29,1.6,0.29c1.73,0,3.34-0.99,4.27-2.64c1.24-2.19,1.04-4.8-0.5-6.58c-1.23-1.42-2.93-2.2-4.63-2.27 C16.24,3.59,14.32,2.07,12.01,2.07z M11.86,0c2.21,0,3.89,1.13,4.92,2.94C15.33,3.03,13.7,3.03,12,3.03s-3.33,0-4.78-0.09 C8,1.13,9.65,0,11.86,0z" />
-  </svg>
-);
+export default Dashboard;
