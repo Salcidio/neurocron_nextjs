@@ -5,7 +5,13 @@ import { Eye, EyeOff, Github, Chrome } from "lucide-react";
 // Main App component
 export default function App() {
   return (
-    <div className="bg-gradient-to-br from-blue-700 to-blue-900 min-h-screen flex items-center justify-center font-sans relative overflow-hidden">
+   <div
+      className="bg-gradient-to-br from-blue-700 to-blue-900 min-h-screen flex items-center justify-center font-sans relative overflow-hidden bg-cover bg-center bg-no-repeat"
+      style={{
+        backgroundImage:
+          "url('https://i.postimg.cc/jjJHnHdH/Whats-App-Image-2025-07-14-at-11-44-41.jpg')",
+      }}
+    >
       <BackgroundShapes />
       <LoginPage />
     </div>
