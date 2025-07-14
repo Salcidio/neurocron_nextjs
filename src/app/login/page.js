@@ -45,9 +45,13 @@ const LoginPage = () => {
   return (
     <div className="w-full max-w-md mx-auto z-10">
       <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-8 m-4">
-        <h1 className="text-white text-3xl font-bold text-center mb-2">
-          Your logo
-        </h1>
+        <div className="flex justify-center mb-4">
+          <img
+            src="https://i.postimg.cc/bwHVDRZ7/PC-background-wallpaper.jpg" // <-- Replace this with your actual image path or URL
+            alt="Flake AI Logo"
+            className="h-16 w-auto"
+          />
+        </div>
         <h2 className="text-white text-2xl font-semibold text-center mb-8">
           Flake ai
         </h2>
