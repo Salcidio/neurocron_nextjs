@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import Snackbar from "./SnackBar";
 
 export default function VoiceCommand() {
   const router = useRouter();
@@ -9,7 +10,13 @@ export default function VoiceCommand() {
   const isListeningRef = useRef(false);
   const shouldContinueListeningRef = useRef(true);
 
-  useEffect(() => {
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [showSnackbar, setShowSnackbar] = useState(false);
+
+  useEffect(() => {    shouldContinueListeningRef.current = true; 
+
+    
+
     if (
       typeof window === "undefined" ||
       !("webkitSpeechRecognition" in window)
@@ -49,7 +56,11 @@ export default function VoiceCommand() {
         .toLowerCase();
       console.log("[Voice] Heard:", transcript);
 
-     if (transcript.includes("flake enter")) {
+      // Show the command in the Snackbar
+      setSnackbarMessage(`You said: "${transcript}"`);
+      setShowSnackbar(true);
+
+         if (transcript.includes("flake enter")) {
         router.push("/auth");
       } else if (transcript.includes("flake register")) {
         router.push("/register");
@@ -63,7 +74,6 @@ export default function VoiceCommand() {
     recognition.onerror = (event) => {
       console.warn("[Voice] Error:", event.error);
 
-      // If permission is denied, stop everything permanently
       if (
         event.error === "not-allowed" ||
         event.error === "service-not-allowed"
@@ -74,7 +84,6 @@ export default function VoiceCommand() {
         return;
       }
 
-      // Restart if allowed
       restartRecognition();
     };
 
@@ -83,7 +92,6 @@ export default function VoiceCommand() {
       restartRecognition();
     };
 
-    // Start on mount
     startRecognition();
 
     return () => {
@@ -96,5 +104,9 @@ export default function VoiceCommand() {
     };
   }, [router]);
 
-  return null;
+  return (
+    <>
+      <Snackbar message={snackbarMessage} visible={showSnackbar} />
+    </>
+  );
 }

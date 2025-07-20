@@ -1,21 +1,27 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "../lib/supabaseClient";
 import { motion } from "framer-motion";
-import { Auth } from "@supabase/auth-ui-react";
-import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { Sparkles, Brain, Zap, MessageCircle } from "lucide-react";
 import { FaSnowflake, FaDocker } from "react-icons/fa";
 import { SiHuggingface } from "react-icons/si";
 import { TbBrandSupabase } from "react-icons/tb";
 import { FaReact } from "react-icons/fa6";
 import Link from "next/link";
+import VoiceCommand from "@/components/VoiceCommand";
 
 export default function Home() {
   const [session, setSession] = useState(null);
+  const [isClient, setIsClient] = useState(false);
+
   const router = useRouter();
 
+  useEffect(() => {
+
+    setIsClient(true);
+  }, []);
+
+  /*
   useEffect(() => {
     const getSession = async () => {
       const {
@@ -38,7 +44,7 @@ export default function Home() {
     });
 
     return () => subscription.unsubscribe();
-  }, [router]);
+  }, [router]);*/
 
   if (session) {
     return (
@@ -60,36 +66,41 @@ export default function Home() {
         <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl animate-float"></div>
 
         {/* Floating Elements */}
-        {[...Array(20)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute"
-            initial={{
-              x: Math.random() * window.innerWidth,
-              y: Math.random() * window.innerHeight,
-              scale: 0,
-            }}
-            animate={{
-              y: [null, Math.random() * window.innerHeight],
-              scale: [0, 1, 0],
-              opacity: [0, 0.6, 0],
-            }}
-            transition={{
-              duration: Math.random() * 8 + 4,
-              repeat: Infinity,
-              delay: Math.random() * 2,
-            }}
-          >
-            {i % 4 === 0 && <Sparkles className="w-4 h-4 text-purple-400" />}
-            {i % 4 === 1 && <Zap className="w-4 h-4 text-yellow-400" />}
-            {i % 4 === 2 && <Brain className="w-4 h-4 text-blue-400" />}
-            {i % 4 === 3 && <MessageCircle className="w-4 h-4 text-pink-400" />}
-          </motion.div>
-        ))}
+        {isClient &&
+          [...Array(20)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute"
+              initial={{
+                x: Math.random() * window.innerWidth,
+                y: Math.random() * window.innerHeight,
+                scale: 0,
+              }}
+              animate={{
+                y: [null, Math.random() * window.innerHeight],
+                scale: [0, 1, 0],
+                opacity: [0, 0.6, 0],
+              }}
+              transition={{
+                duration: Math.random() * 8 + 4,
+                repeat: Infinity,
+                delay: Math.random() * 2,
+              }}
+            >
+              {i % 4 === 0 && <Sparkles className="w-4 h-4 text-purple-400" />}
+              {i % 4 === 1 && <Zap className="w-4 h-4 text-yellow-400" />}
+              {i % 4 === 2 && <Brain className="w-4 h-4 text-blue-400" />}
+              {i % 4 === 3 && (
+                <MessageCircle className="w-4 h-4 text-pink-400" />
+              )}
+            </motion.div>
+          ))}
       </div>
 
       <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
         <div className="max-w-4xl w-full">
+          <VoiceCommand />
+
           <div className="text-center mb-12">
             <motion.div
               initial={{ scale: 0 }}
@@ -175,7 +186,6 @@ export default function Home() {
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-         
             className="max-w-md mx-auto"
           >
             <Link
