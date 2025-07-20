@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+/*import { NextResponse } from 'next/server';
 import { HuggingFaceAPI } from '../../../lib/huggingface';
 
 export async function POST(request) {
@@ -17,4 +17,4 @@ export async function POST(request) {
     console.error('API Error:', error);
     return NextResponse.json({ message: 'Error generating response' }, { status: 500 });
   }
-}
+}}*/
