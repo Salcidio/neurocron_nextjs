@@ -9,6 +9,7 @@ import { TbBrandSupabase } from "react-icons/tb";
 import { FaReact } from "react-icons/fa6";
 import Link from "next/link";
 import VoiceCommand from "@/components/VoiceCommand";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function Home() {
   const [session, setSession] = useState(null);
@@ -17,11 +18,9 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-
     setIsClient(true);
   }, []);
 
-  /*
   useEffect(() => {
     const getSession = async () => {
       const {
@@ -44,7 +43,7 @@ export default function Home() {
     });
 
     return () => subscription.unsubscribe();
-  }, [router]);*/
+  }, [router]);
 
   if (session) {
     return (

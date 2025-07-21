@@ -13,7 +13,8 @@ export default function VoiceCommand() {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [showSnackbar, setShowSnackbar] = useState(false);
 
-  useEffect(() => {    shouldContinueListeningRef.current = true; 
+  useEffect(() => {   
+     shouldContinueListeningRef.current = true; 
 
     
 

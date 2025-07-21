@@ -17,8 +17,10 @@ export default function NotFound() {
         className="text-center p-8"
       >
         <h1 className="text-6xl font-bold text-white mb-4">404</h1>
+        <h1 className="text-6xl font-bold text-white mb-4">Flake ai</h1>
+
         <p className="text-xl text-purple-200 mb-8">
-          Oops! The page you're looking for doesn't exist.
+          Oops! The page you&#39;re looking for doesn&#39;t exist.
         </p>
         <button
           onClick={() => router.back()}
