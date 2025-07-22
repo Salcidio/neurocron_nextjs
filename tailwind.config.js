@@ -83,18 +83,48 @@ module.exports = {
           800: '#155e75',
           900: '#164e63',
         },
+        // Adding custom blue and pink shades
+        'neon-blue': {
+          50: '#e0f2fe',
+          100: '#bae6fd',
+          200: '#7dd3fc',
+          300: '#38bdf8',
+          400: '#0ea5e9',
+          500: '#0284c7',
+          600: '#0369a1',
+          700: '#075985',
+          800: '#0c4a6e',
+          900: '#164e63',
+        },
+        'neon-pink': {
+          50: '#fdf2f8',
+          100: '#fce7f3',
+          200: '#fbcfe8',
+          300: '#f9a8d4',
+          400: '#f472b6',
+          500: '#ec4899',
+          600: '#db2777',
+          700: '#be185d',
+          800: '#9d174d',
+          900: '#831843',
+        },
       },
       // Add custom gradients
       backgroundImage: {
         'neon-gradient': 'linear-gradient(45deg, #a855f7, #06b6d4)',
         'neon-gradient-hover': 'linear-gradient(45deg, #9333ea, #0891b2)',
-        'chat-gradient': 'linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(6, 182, 212, 0.1))',
+        // Modified to blue-pink gradient
+        'chat-gradient': 'linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(236, 72, 153, 0.1))',
+        'blue-pink-gradient': 'linear-gradient(to right, #3b82f6, #ec4899)', // Tailwind blue-500 to pink-500
+        'blue-pink-gradient-br': 'linear-gradient(to bottom right, #3b82f6, #ec4899)', // Bottom-right blue to pink
       },
       // Custom box shadows for neon effects
       boxShadow: {
         'neon-purple': '0 0 20px rgb(168 85 247 / 0.5)',
         'neon-cyan': '0 0 20px rgb(6 182 212 / 0.5)',
         'neon-glow': '0 0 30px rgb(168 85 247 / 0.3), 0 0 60px rgb(6 182 212 / 0.3)',
+        // Adjusted for blue/pink
+        'blue-glow': '0 0 30px rgb(59 130 246 / 0.3), 0 0 60px rgb(236 72 153 / 0.3)',
       },
     },
   },
