@@ -201,7 +201,7 @@ export default function ChatPage() {
   // Loading screen for signing out
   if (signingOut) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-black to-blue-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-1000 via-blue to-blue-800 flex items-center justify-center">
         <div className="text-white text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
           <p>Exiting...</p>
@@ -294,7 +294,7 @@ export default function ChatPage() {
                     <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 hover:bg-white/15 transition-all duration-200">
                       <p className="text-white text-sm">
                         <BookA className="w-8 h-8 text-pink-400 mx-auto mb-2" />
-                        AI Powered Conversations
+                        Parkinson aware context
                       </p>
                     </div>
                     <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 hover:bg-white/15 transition-all duration-200">
