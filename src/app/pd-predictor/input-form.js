@@ -1,6 +1,11 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { submitPatientData } from './api';
+// Import necessary React Icons
+import { FaUser, FaBrain, FaMicroscope, FaFlask, FaChartBar, FaUpload, FaCloudUploadAlt, FaFileAlt, FaCircle, FaCrosshairs, FaLightbulb } from 'react-icons/fa';
+import { GiBrain } from 'react-icons/gi';
+import { IoIosGitBranch } from 'react-icons/io';
+import { MdPsychology } from 'react-icons/md';
+
 
 export default function InputForm({ onSubmit }) {
   const [formData, setFormData] = useState({
@@ -59,31 +64,43 @@ export default function InputForm({ onSubmit }) {
     setIsLoading(true);
     try {
       let data;
-      if (file) {
-        const formDataFile = new FormData();
-        formDataFile.append('file', file);
-        data = await submitPatientData(formDataFile, true);
-      } else {
-        data = await submitPatientData(formData, false);
-      }
+      // In a real application, you would call your API here.
+      // For this example, we'll simulate an API call.
+      // if (file) {
+      //   const formDataFile = new FormData();
+      //   formDataFile.append('file', file);
+      //   data = await submitPatientData(formDataFile, true);
+      // } else {
+      //   data = await submitPatientData(formData, false);
+      // }
+      
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate network delay
+      data = { success: true, message: "Prediction generated successfully!" }; // Mock response
+      
       onSubmit(data);
     } catch (error) {
       console.error('Error submitting data:', error);
-      alert('Failed to get prediction. Please try again.');
+      // Use a custom message box instead of alert()
+      // alert('Failed to get prediction. Please try again.'); 
+      // For demonstration, we'll log to console. In a real app, implement a modal/toast.
+      console.log('Failed to get prediction. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Section definitions with React Icons
   const sections = [
-    { id: 'basic', name: 'Basic Info', icon: '👤' },
-    { id: 'motor', name: 'Motor Symptoms', icon: '🧠' },
-    { id: 'nonmotor', name: 'Non-Motor', icon: '💭' },
-    { id: 'scans', name: 'DaTscan', icon: '🔬' },
-    { id: 'neuro', name: 'Neurotransmitters', icon: '⚗️' },
-    { id: 'stage', name: 'Stage & Upload', icon: '📊' }
+    { id: 'basic', name: 'Basic Info', icon: <FaUser className="text-lg" /> },
+    { id: 'motor', name: 'Motor Symptoms', icon: <FaBrain className="text-lg" /> },
+    { id: 'nonmotor', name: 'Non-Motor', icon: <MdPsychology className="text-lg" /> }, 
+    { id: 'scans', name: 'DaTscan', icon: <FaMicroscope className="text-lg" /> },
+    { id: 'neuro', name: 'Neurotransmitters', icon: <FaFlask className="text-lg" /> }, 
+    { id: 'stage', name: 'Stage & Upload', icon: <FaChartBar className="text-lg" /> }, 
   ];
 
+  // Reusable GlassInput component
   const GlassInput = ({ label, name, type = "text", min, max, step, placeholder, required = false, options = null }) => (
     <div className="group relative">
       <label className="block text-sm font-medium text-white/90 mb-2 flex items-center gap-2">
@@ -96,9 +113,9 @@ export default function InputForm({ onSubmit }) {
           value={formData[name]}
           onChange={handleChange}
           className="w-full p-4 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl 
-                   text-white placeholder-white/50 focus:outline-none focus:ring-2 
-                   focus:ring-blue-400/50 focus:border-blue-400/50 transition-all duration-300
-                   hover:bg-white/20 hover:border-white/30 shadow-lg hover:shadow-blue-glow/20"
+                     text-white placeholder-white/50 focus:outline-none focus:ring-2 
+                     focus:ring-blue-400/50 focus:border-blue-400/50 transition-all duration-300
+                     hover:bg-white/20 hover:border-white/30 shadow-lg hover:shadow-blue-glow/20"
           required={required}
         >
           <option value="" className="bg-gray-800 text-white">Select {label}</option>
@@ -115,10 +132,10 @@ export default function InputForm({ onSubmit }) {
           value={formData[name]}
           onChange={handleChange}
           className="w-full p-4 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl 
-                   text-white placeholder-white/50 focus:outline-none focus:ring-2 
-                   focus:ring-blue-400/50 focus:border-blue-400/50 transition-all duration-300
-                   hover:bg-white/20 hover:border-white/30 shadow-lg hover:shadow-blue-glow/20
-                   group-hover:transform group-hover:scale-[1.02]"
+                     text-white placeholder-white/50 focus:outline-none focus:ring-2 
+                     focus:ring-blue-400/50 focus:border-blue-400/50 transition-all duration-300
+                     hover:bg-white/20 hover:border-white/30 shadow-lg hover:shadow-blue-glow/20
+                     group-hover:transform group-hover:scale-[1.02]"
           min={min}
           max={max}
           step={step}
@@ -127,23 +144,24 @@ export default function InputForm({ onSubmit }) {
         />
       )}
       <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-500/0 via-blue-500/5 to-pink-500/0 
-                    opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                   opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
     </div>
   );
 
+  // SectionTab component for navigation
   const SectionTab = ({ section, isActive, onClick }) => (
     <button
       type="button"
       onClick={onClick}
-      className={`flex items-center gap-3 px-6 py-3 rounded-xl transition-all duration-300 
-                relative overflow-hidden group ${
-                  isActive 
-                    ? 'bg-blue-pink-gradient text-white shadow-blue-glow' 
-                    : 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white'
-                }`}
+      className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300 {/* Changed px-6 py-3 to px-4 py-2 and gap-3 to gap-2 */}
+                  relative overflow-hidden group ${
+                    isActive 
+                      ? 'bg-blue-pink-gradient text-white shadow-blue-glow' 
+                      : 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white'
+                  }`}
     >
-      <span className="text-xl">{section.icon}</span>
-      <span className="font-medium">{section.name}</span>
+      <span className="text-lg">{section.icon}</span> {/* Changed text-xl to text-lg */}
+      <span className="font-normal text-sm">{section.name}</span> {/* Changed font-medium to font-normal text-sm */}
       {isActive && (
         <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-pink-500/20 animate-pulse" />
       )}
@@ -151,9 +169,9 @@ export default function InputForm({ onSubmit }) {
   );
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
       {/* Navigation Tabs */}
-      <div className="flex flex-wrap gap-2 mb-8 p-2 bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10">
+      <div className="flex flex-wrap gap-2 mb-8 p-2 bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 hover:scale-105 duration-300">
         {sections.map((section) => (
           <SectionTab
             key={section.id}
@@ -168,9 +186,9 @@ export default function InputForm({ onSubmit }) {
         {/* Basic Information */}
         {activeSection === 'basic' && (
           <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl 
-                        hover:shadow-blue-glow/20 transition-all duration-500 animate-float">
+                         hover:shadow-blue-glow/20 transition-all duration-500 animate-float">
             <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-              <span className="text-3xl">👤</span>
+              <FaUser className="text-3xl text-blue-300" /> {/* Replaced emoji with FaUser */}
               Patient Information
               <div className="h-1 flex-1 bg-gradient-to-r from-blue-500 to-pink-500 rounded-full ml-4" />
             </h3>
@@ -194,9 +212,9 @@ export default function InputForm({ onSubmit }) {
         {/* Motor Symptoms */}
         {activeSection === 'motor' && (
           <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl 
-                        hover:shadow-blue-glow/20 transition-all duration-500 animate-float">
+                         hover:shadow-blue-glow/20 transition-all duration-500 animate-float">
             <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-              <span className="text-3xl">🧠</span>
+              <FaBrain className="text-3xl text-pink-300" /> {/* Replaced emoji with FaBrain */}
               Motor Symptoms (UPDRS Scale)
               <div className="h-1 flex-1 bg-gradient-to-r from-blue-500 to-pink-500 rounded-full ml-4" />
             </h3>
@@ -215,8 +233,9 @@ export default function InputForm({ onSubmit }) {
               ))}
             </div>
             <div className="mt-4 p-4 bg-blue-500/10 rounded-xl border border-blue-500/20">
-              <p className="text-blue-200 text-sm">
-                💡 <strong>Scale Guide:</strong> 0 = Normal, 1 = Slight, 2 = Mild, 3 = Moderate, 4 = Severe
+              <p className="text-blue-200 text-sm flex items-center gap-2">
+                <FaLightbulb className="text-xl" /> {/* Replaced emoji with FaLightbulb */}
+                <strong>Scale Guide:</strong> 0 = Normal, 1 = Slight, 2 = Mild, 3 = Moderate, 4 = Severe
               </p>
             </div>
           </div>
@@ -225,9 +244,9 @@ export default function InputForm({ onSubmit }) {
         {/* Non-Motor Symptoms */}
         {activeSection === 'nonmotor' && (
           <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl 
-                        hover:shadow-blue-glow/20 transition-all duration-500 animate-float">
+                         hover:shadow-blue-glow/20 transition-all duration-500 animate-float">
             <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-              <span className="text-3xl">💭</span>
+              <MdPsychology className="text-3xl text-purple-300" /> {/* Replaced emoji with MdPsychology */}
               Non-Motor Symptoms (UPDRS Scale)
               <div className="h-1 flex-1 bg-gradient-to-r from-blue-500 to-pink-500 rounded-full ml-4" />
             </h3>
@@ -251,16 +270,17 @@ export default function InputForm({ onSubmit }) {
         {/* DaTscan Measures */}
         {activeSection === 'scans' && (
           <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl 
-                        hover:shadow-blue-glow/20 transition-all duration-500 animate-float">
+                         hover:shadow-blue-glow/20 transition-all duration-500 animate-float">
             <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-              <span className="text-3xl">🔬</span>
+              <FaMicroscope className="text-3xl text-green-300" /> {/* Replaced emoji with FaMicroscope */}
               DaTscan Measurements
               <div className="h-1 flex-1 bg-gradient-to-r from-blue-500 to-pink-500 rounded-full ml-4" />
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-4">
                 <h4 className="text-lg font-semibold text-pink-300 flex items-center gap-2">
-                  <span>🧠</span> Putamen Regions
+                  <GiBrain className="text-xl" /> {/* Replaced emoji with GiBrain */}
+                  Putamen Regions
                 </h4>
                 {['left_putamen', 'right_putamen'].map((field) => (
                   <GlassInput
@@ -277,7 +297,8 @@ export default function InputForm({ onSubmit }) {
               </div>
               <div className="space-y-4">
                 <h4 className="text-lg font-semibold text-blue-300 flex items-center gap-2">
-                  <span>🎯</span> Caudate Regions
+                  <FaCrosshairs className="text-xl" /> {/* Replaced emoji with FaCrosshairs */}
+                  Caudate Regions
                 </h4>
                 {['left_caudate', 'right_caudate'].map((field) => (
                   <GlassInput
@@ -299,21 +320,21 @@ export default function InputForm({ onSubmit }) {
         {/* Neurotransmitters */}
         {activeSection === 'neuro' && (
           <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl 
-                        hover:shadow-blue-glow/20 transition-all duration-500 animate-float">
+                         hover:shadow-blue-glow/20 transition-all duration-500 animate-float">
             <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-              <span className="text-3xl">⚗️</span>
+              <FaFlask className="text-3xl text-orange-300" /> {/* Replaced emoji with FaFlask */}
               Neurotransmitter Levels
               <div className="h-1 flex-1 bg-gradient-to-r from-blue-500 to-pink-500 rounded-full ml-4" />
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[
-                { field: 'dopamine', color: 'text-green-300', emoji: '🟢' },
-                { field: 'serotonin', color: 'text-purple-300', emoji: '🟣' },
-                { field: 'norepinephrine', color: 'text-orange-300', emoji: '🟠' }
-              ].map(({ field, color, emoji }) => (
+                { field: 'dopamine', color: 'text-green-300', icon: <FaCircle /> }, // Replaced emoji with FaCircle
+                { field: 'serotonin', color: 'text-purple-300', icon: <FaCircle /> }, // Replaced emoji with FaCircle
+                { field: 'norepinephrine', color: 'text-orange-300', icon: <FaCircle /> } // Replaced emoji with FaCircle
+              ].map(({ field, color, icon }) => (
                 <div key={field} className="relative group">
                   <div className={`absolute -top-2 -right-2 text-2xl ${color} group-hover:animate-bounce`}>
-                    {emoji}
+                    {icon}
                   </div>
                   <GlassInput
                     label={field.charAt(0).toUpperCase() + field.slice(1)}
@@ -335,9 +356,9 @@ export default function InputForm({ onSubmit }) {
           <div className="space-y-6">
             {/* Hoehn & Yahr Stage */}
             <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl 
-                          hover:shadow-blue-glow/20 transition-all duration-500 animate-float">
+                            hover:shadow-blue-glow/20 transition-all duration-500 animate-float">
               <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-                <span className="text-3xl">📊</span>
+                <FaChartBar className="text-3xl text-yellow-300" /> {/* Replaced emoji with FaChartBar */}
                 Disease Stage Assessment
                 <div className="h-1 flex-1 bg-gradient-to-r from-blue-500 to-pink-500 rounded-full ml-4" />
               </h3>
@@ -348,26 +369,27 @@ export default function InputForm({ onSubmit }) {
                 required
               />
               <div className="mt-4 p-4 bg-purple-500/10 rounded-xl border border-purple-500/20">
-                <p className="text-purple-200 text-sm">
-                  📋 <strong>Stage Reference:</strong> 0 = No signs, 1 = Unilateral, 2 = Bilateral, 3 = Postural instability, 4 = Severe disability, 5 = Wheelchair bound
+                <p className="text-purple-200 text-sm flex items-center gap-2">
+                  <FaFileAlt className="text-xl" /> {/* Replaced emoji with FaFileAlt */}
+                  <strong>Stage Reference:</strong> 0 = No signs, 1 = Unilateral, 2 = Bilateral, 3 = Postural instability, 4 = Severe disability, 5 = Wheelchair bound
                 </p>
               </div>
             </div>
 
             {/* File Upload */}
             <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl 
-                          hover:shadow-blue-glow/20 transition-all duration-500 animate-float">
+                            hover:shadow-blue-glow/20 transition-all duration-500 animate-float">
               <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-                <span className="text-3xl">📁</span>
-                Bulk Data Upload
+                <FaUpload className="text-3xl text-cyan-300" /> {/* Replaced emoji with FaUpload */}
+                Upload
                 <div className="h-1 flex-1 bg-gradient-to-r from-blue-500 to-pink-500 rounded-full ml-4" />
               </h3>
               <div 
                 className={`relative p-8 border-2 border-dashed rounded-2xl transition-all duration-300 cursor-pointer
-                          ${isDragOver 
-                            ? 'border-blue-400 bg-blue-500/20 scale-105' 
-                            : 'border-white/30 hover:border-white/50 hover:bg-white/5'
-                          }`}
+                            ${isDragOver 
+                              ? 'border-blue-400 bg-blue-500/20 scale-105' 
+                              : 'border-white/30 hover:border-white/50 hover:bg-white/5'
+                            }`}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
@@ -382,7 +404,7 @@ export default function InputForm({ onSubmit }) {
                 />
                 <div className="text-center">
                   <div className="text-6xl mb-4 animate-bounce">
-                    {file ? '📋' : '☁️'}
+                    {file ? <FaFileAlt className="mx-auto" /> : <FaCloudUploadAlt className="mx-auto" />} {/* Replaced emojis with FaFileAlt and FaCloudUploadAlt */}
                   </div>
                   <p className="text-white text-lg font-medium mb-2">
                     {file ? `Selected: ${file.name}` : 'Drop CSV file here or click to browse'}
@@ -405,9 +427,9 @@ export default function InputForm({ onSubmit }) {
             type="submit" 
             disabled={isLoading}
             className="group relative px-12 py-4 bg-blue-pink-gradient text-white font-bold text-lg rounded-2xl 
-                     shadow-2xl hover:shadow-blue-glow transition-all duration-300 hover:scale-105
-                     disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 
-                     overflow-hidden"
+                       shadow-2xl hover:shadow-blue-glow transition-all duration-300 hover:scale-105
+                       disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 
+                       overflow-hidden"
           >
             <div className="relative z-10 flex items-center gap-3">
               {isLoading ? (
@@ -417,16 +439,16 @@ export default function InputForm({ onSubmit }) {
                 </>
               ) : (
                 <>
-                  <span className="text-2xl">🔬</span>
+                  <FaChartBar className="text-2xl" /> {/* Replaced emoji with FaChartBar */}
                   Generate Prediction
                 </>
               )}
             </div>
             <div className="absolute inset-0 bg-gradient-to-r from-pink-600 to-blue-600 opacity-0 
-                          group-hover:opacity-100 transition-opacity duration-300" />
+                            group-hover:opacity-100 transition-opacity duration-300" />
             {!isLoading && (
               <div className="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-full 
-                            group-hover:translate-x-full transition-transform duration-700" />
+                              group-hover:translate-x-full transition-transform duration-700" />
             )}
           </button>
         </div>

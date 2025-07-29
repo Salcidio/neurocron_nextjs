@@ -39,34 +39,33 @@ export default function ChatPage() {
     scrollToBottom();
   }, [messages]);
 
-  // Check authentication and initialize
-  useEffect(() => {
-    let isMounted = true;
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) {
-        router.replace("/");
-      } else if (isMounted) {
-        setUser(user);
-        // The welcome message initialization logic has been removed from here.
-        setLoading(false);
-      }
-    });
+  //  //Check authentication and initialize
+  // useEffect(() => {
+  //   let isMounted = true;
+  //   supabase.auth.getUser().then(({ data: { user } }) => {
+  //     if (!user) {
+  //       router.replace("/");
+  //     } else if (isMounted) {
+  //       setUser(user);
+  //       setLoading(false);
+  //     }
+  //   });
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (_, session) => {
-        if (!session?.user) {
-          router.replace("/auth");
-        } else {
-          setUser(session.user);
-        }
-      }
-    );
+  //   const { data: authListener } = supabase.auth.onAuthStateChange(
+  //     async (_, session) => {
+  //       if (!session?.user) {
+  //         router.replace("/auth");
+  //       } else {
+  //         setUser(session.user);
+  //       }
+  //     }
+  //   );
 
-    return () => {
-      isMounted = false;
-      authListener.subscription.unsubscribe();
-    };
-  }, [router, messages.length]); // messages.length is in the dependency array to prevent stale closure issues for messages
+  //   return () => {
+  //     isMounted = false;
+  //     authListener.subscription.unsubscribe();
+  //   };
+  // }, [router, messages.length]); // messages.length is in the dependency array to prevent stale closure issues for messages
 
   const MAX_HISTORY_TURNS = 4; // Define how many recent user/bot pairs to keep
   const handleSendMessage = async (inputValue, selectedMode) => {
@@ -179,9 +178,9 @@ export default function ChatPage() {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      setSigningOut(false);
       console.log("User signed out successfully");
       router.push("/");
+      setSigningOut(false); //trying to exit to the page before the loading exiting end showing
     } catch (error) {
       setSigningOut(false);
       console.error("Error signing out:", error.message);
@@ -189,9 +188,9 @@ export default function ChatPage() {
   };
 
   // Loading screen
-  if (loading) {
+  if (!loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-black to-pink-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-900  to-blue-900 flex items-center justify-center">
         <div className="text-white text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
           <p>Loading...</p>
@@ -202,7 +201,7 @@ export default function ChatPage() {
   // Loading screen for signing out
   if (signingOut) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-black to-pink-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-black to-blue-900 flex items-center justify-center">
         <div className="text-white text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
           <p>Exiting...</p>
@@ -212,16 +211,16 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white relative overflow-hidden flex">
+    <div className="min-h-screen bg-gradient-to-br from-blue-1000 via-blue-1000 to-blue-1000  text-white relative overflow-hidden flex">
       {/* Sidebar */}
       <Sidebar onSignOut={handleSignOut} />
 
       {/* Animated background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 to-pink-900/20 -z-10"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 to-blue-900/20 -z-10"></div>
       <div className="absolute inset-0 -z-10">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-pink-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl animate-pulse delay-500"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl animate-pulse delay-200"></div>
       </div>
 
       {/* Floating Particles */}
@@ -238,35 +237,19 @@ export default function ChatPage() {
         />
       ))}
 
-      {/* AI Brain Logo Background (only on welcome screen) */}
-      {showWelcome && (
-        <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none opacity-5 -z-10">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{
-              repeat: Infinity,
-              duration: 30,
-              ease: "linear",
-            }}
-            className="bg-gradient-to-r from-blue-500 to-pink-500 p-6 rounded-full w-fit"
-          >
-            <FaSnowflake size={600} className="text-white animate-pulse" />
-          </motion.div>
-        </div>
-      )}
-
       {/* Main content area */}
       <div className="flex-1 flex flex-col relative z-10">
         {/* Header - now specific to chat page actions */}
-        <header className="relative z-20 w-full bg-black/50 backdrop-blur-sm p-4 flex items-center justify-end">
+        <header className="relative z-20 w-full bg-black/50 backdrop-blur-sm p-2 flex items-center justify-end">
           <button
             onClick={clearChat}
-            className="p-3 bg-blue-600 rounded-lg text-white font-medium hover:shadow-lg hover:shadow-blue-500/25 transform hover:scale-105 transition-all duration-200 border border-blue-400/50"
+            className="p-2 bg-blue-600 rounded-md text-white font-medium hover:shadow-md hover:shadow-blue-500/25 transform hover:scale-105 transition-all duration-200 border border-blue-400/50 cursor-pointer"
             aria-label="Clear Chat"
           >
-            <MessageSquarePlus size={22} /> {/* Replaced text with icon */}
+            <MessageSquarePlus size={20} />
           </button>
         </header>
+
         {/* Main chat content and input area */}
         <div className="flex-1 flex flex-col max-w-6xl mx-auto w-full">
           {/* Main Content Area */}
@@ -290,9 +273,22 @@ export default function ChatPage() {
                     </motion.div>
                   </div>
 
-                  <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 via-pink-400 to-blue-400 bg-clip-text text-transparent mb-6">
-                    Hello <br /> How can i assist you today.
-                  </h1>
+                  <motion.h1
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="text-5xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent mb-6 animate-gradient"
+                  >
+                    {user
+                      ? `Hello Again , ${
+                          user.user_metadata?.name || user.email
+                        }`
+                      : "Welcome"}
+                  </motion.h1>
+
+                  <div>
+                    <br />
+                  </div>
 
                   <div className="grid grid-cols-2 gap-4 max-w-md mx-auto mb-8">
                     <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 hover:bg-white/15 transition-all duration-200">
@@ -337,15 +333,15 @@ export default function ChatPage() {
                         flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center border-2
                         ${
                           message.type === "user"
-                            ? "bg-gradient-to-r from-blue-500 to-pink-500 border-blue-400 shadow-lg shadow-blue-500/50"
-                            : "bg-gradient-to-r from-pink-500 to-blue-500 border-pink-400 shadow-lg shadow-pink-500/50"
+                            ? "bg-gradient-to-r from-blue-500 to-blue-500 border-blue-400 shadow-lg shadow-blue-500/50"
+                            : "bg-gradient-to-r from-blue-500 to-blue-500 border-blue-400 shadow-lg shadow-blue-500/50"
                         }
                       `}
                     >
                       {message.type === "user" ? (
                         <User size={22} className="text-white" />
                       ) : (
-                        <Bot size={22} className="text-white" />
+                        <FaSnowflake size={22} className="text-white" />
                       )}
                     </div>
 
@@ -355,8 +351,8 @@ export default function ChatPage() {
                         flex-1 max-w-4xl p-5 rounded-2xl border backdrop-blur-sm
                         ${
                           message.type === "user"
-                            ? "bg-gradient-to-r from-blue-900/50 to-pink-900/50 border-blue-500/50 shadow-lg shadow-blue-500/20"
-                            : "bg-gradient-to-r from-pink-900/50 to-blue-900/50 border-pink-500/50 shadow-lg shadow-pink-500/20"
+                            ? "bg-gradient-to-r from-blue-900/50 to-blue-900/50 border-blue-500/50 shadow-lg shadow-blue-500/20"
+                            : "bg-gradient-to-r from-blue-900/50 to-blue-900/50 border-blue-500/50 shadow-lg shadow-blue-500/20"
                         }
                       `}
                     >
@@ -372,10 +368,10 @@ export default function ChatPage() {
                           className={
                             message.type === "user"
                               ? "text-blue-400"
-                              : "text-pink-400"
+                              : "text-blue-400"
                           }
                         >
-                          {message.type === "user" ? "You" : "AI Assistant"}
+                          {message.type === "user" ? "You" : "Flake ai"}
                         </span>
                       </div>
                     </div>
@@ -385,18 +381,18 @@ export default function ChatPage() {
                 {/* Loading indicator */}
                 {isLoading && (
                   <div className="flex items-start space-x-4">
-                    <div className="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center border-2 bg-gradient-to-r from-pink-500 to-blue-500 border-pink-400 shadow-lg shadow-pink-500/50">
-                      <Bot size={22} className="text-white" />
+                    <div className="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center border-2 bg-gradient-to-r from-blue-500 to-blue-500 border-blue-400 shadow-lg shadow-blue-500/50">
+                      <FaSnowflake size={22} className="text-white" />
                     </div>
-                    <div className="flex-1 max-w-4xl p-5 rounded-2xl border backdrop-blur-sm bg-gradient-to-r from-pink-900/50 to-blue-900/50 border-pink-500/50 shadow-lg shadow-pink-500/20">
+                    <div className="flex-1 max-w-4xl p-5 rounded-2xl border backdrop-blur-sm bg-gradient-to-r from-blue-900/50 to-blue-900/50 border-blue-500/50 shadow-lg shadow-blue-500/20">
                       <div className="flex items-center space-x-3">
                         <div className="flex space-x-1">
-                          <div className="w-2 h-2 bg-pink-400 rounded-full animate-bounce"></div>
-                          <div className="w-2 h-2 bg-pink-400 rounded-full animate-bounce delay-150"></div>
-                          <div className="w-2 h-2 bg-pink-400 rounded-full animate-bounce delay-300"></div>
+                          <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
+                          <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce delay-150"></div>
+                          <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce delay-300"></div>
                         </div>
                         <span className="text-gray-400 text-sm">
-                          AI is thinking...
+                          Waiting for Flake ai ...
                         </span>
                       </div>
                     </div>

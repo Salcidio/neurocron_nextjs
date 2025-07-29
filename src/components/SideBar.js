@@ -1,31 +1,39 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   Home,
   MessageCircle,
   User,
   Settings,
   LogOut,
-  Sparkles, // Kept for the main logo in SidebarItem if needed elsewhere
-  Menu, // For the collapsed state toggle icon
-  ChevronLeft, // For the expanded state toggle icon
-  Compass, // For Explore
-  History, // For History
-  Star, // For Favorites
+  Menu,
+  ChevronLeft,
+  Compass,
+  History,
+  BrainCircuit,
+  Star,
 } from "lucide-react";
-import Link from "next/link";
+import {
+  Home as HomeFill,
+  MessageCircle as MessageCircleFill,
+  Compass as CompassFill,
+  History as HistoryFill,
+  Star as StarFill,
+  User as UserFill,
+  Settings as SettingsFill,
+} from "lucide-react"; // Swap for filled icons if custom
 
 export default function Sidebar({ onSignOut }) {
   const [collapsed, setCollapsed] = useState(true);
 
   return (
     <aside
-      className={`h-screen bg-black/80 border-r border-blue-500/20 flex flex-col justify-between transition-all duration-300 ${
-        collapsed ? "w-20" : "w-64"
+      className={`fixed top-0 left-0 h-screen bg-black/80 border-r border-blue-500/20 flex flex-col justify-between transition-all duration-500 ease-in-out overflow-hidden z-50 ${
+        collapsed ? "w-16" : "w-64"
       }`}
     >
-      {/* Top section - Logo and Toggle Button */}
       <div>
         <button
           className="flex items-center justify-center w-full py-4 hover:bg-blue-900/20 transition cursor-pointer"
@@ -33,58 +41,70 @@ export default function Sidebar({ onSignOut }) {
           aria-label="Toggle sidebar"
         >
           {collapsed ? (
-            <Menu className="text-blue-400" size={28} /> // Icon when collapsed
+            <Menu
+              className="text-blue-400 transition-all duration-300"
+              size={24}
+            />
           ) : (
-            <div className="flex items-center gap-2">
-              <ChevronLeft className="text-white ml-auto" size={24} />{" "}
-              {/* Icon when expanded */}
+            <div className="flex items-center justify-end px-4">
+              <ChevronLeft
+                className="text-white transition-all duration-300"
+                size={24}
+              />
             </div>
           )}
         </button>
+
         <nav className="mt-8 flex flex-col gap-2">
           <SidebarItem
-            icon={<Home size={22} />}
+            IconOutlined={Home}
+            IconFilled={HomeFill}
             label="Home"
             collapsed={collapsed}
             href="/"
           />
           <SidebarItem
-            icon={<MessageCircle size={22} />}
-            label="Chat"
+            IconOutlined={MessageCircle}
+            IconFilled={MessageCircleFill}
+            label="chat"
             collapsed={collapsed}
             href="/chat"
           />
-          {/* New items from the image */}
           <SidebarItem
-            icon={<Compass size={22} />}
-            label="Explore"
+            IconOutlined={Compass}
+            IconFilled={CompassFill}
+            label="Predictor"
             collapsed={collapsed}
-            href="/explore" // Assuming a route /explore
+            href="/pd-predictor"
           />
           <SidebarItem
-            icon={<History size={22} />}
-            label="History"
+            IconOutlined={BrainCircuit}
+            IconFilled={BrainCircuit}
+            label="mri"
             collapsed={collapsed}
-            href="/history" // Assuming a route /history
+            href="/mri"
           />
           <SidebarItem
-            icon={<Star size={22} />}
+            IconOutlined={Star}
+            IconFilled={StarFill}
             label="Favorites"
             collapsed={collapsed}
-            href="/favorites" // Assuming a route /favorites
+            href="/favorites"
           />
         </nav>
       </div>
-      {/* Bottom section */}
+
       <div className="flex flex-col gap-2 mb-6">
         <SidebarItem
-          icon={<User size={22} />}
+          IconOutlined={User}
+          IconFilled={UserFill}
           label="Profile"
           collapsed={collapsed}
           href="/profile"
         />
         <SidebarItem
-          icon={<Settings size={22} />}
+          IconOutlined={Settings}
+          IconFilled={SettingsFill}
           label="Settings"
           collapsed={collapsed}
           href="/settings"
@@ -93,22 +113,38 @@ export default function Sidebar({ onSignOut }) {
           onClick={onSignOut}
           className="flex items-center gap-3 px-6 py-3 text-red-400 hover:bg-red-900/20 transition w-full"
         >
-          <LogOut size={22} />
-          {!collapsed && <span>Sign Out</span>}
+          <span className="w-6 flex justify-center items-center">
+            <LogOut size={20} />
+          </span>
+          {!collapsed && (
+            <span className="transition-opacity duration-300">Sign Out</span>
+          )}
         </button>
       </div>
     </aside>
   );
 }
 
-function SidebarItem({ icon, label, collapsed, href }) {
+function SidebarItem({ IconOutlined, IconFilled, label, collapsed, href }) {
+  const [hovered, setHovered] = useState(false);
+
   return (
     <Link
       href={href}
-      className="flex items-center gap-3 px-6 py-3 text-white hover:bg-blue-900/20 transition"
+      className="flex items-center gap-3 px-6 py-3 text-white hover:bg-blue-900/20 transition-all duration-300"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
-      {icon}
-      {!collapsed && <span>{label}</span>}
+      <span className="w-6 flex justify-center items-center transition-transform duration-300">
+        {hovered ? <IconFilled size={20} /> : <IconOutlined size={20} />}
+      </span>
+      <span
+        className={`transition-opacity duration-300 ${
+          collapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100 w-auto"
+        }`}
+      >
+        {label}
+      </span>
     </Link>
   );
 }

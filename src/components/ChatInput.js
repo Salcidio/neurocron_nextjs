@@ -41,29 +41,33 @@ export default function ChatInput({ onSendMessage, isLoading }) {
   };
 
   return (
-    <div className="sticky bottom-0 mb-6 mx-4">
+    <div className="sticky bottom-0 mb-6 mx-4 ">
       {/* The main container for the input area. */}
       <div
         className="relative w-full rounded-2xl bg-zinc-900 border border-zinc-700 shadow-xl
-                   focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-all duration-300"
+                   focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-all duration-300 "
       >
         {/* Input area */}
-        <form onSubmit={handleSubmit} className="relative p-3 flex items-center space-x-2">
+        <form
+          onSubmit={handleSubmit}
+          className="relative p-3 flex items-center space-x-2 bg-blue-500/10 rounded-2xl"
+        >
           {/* AI Mode Selection Button (now uses the current mode's icon) */}
-          <div className="relative">
+          <div className="relative ">
             <button
               type="button"
               onClick={() => setShowDropdown(!showDropdown)}
-              className="p-2 rounded-full text-zinc-400 hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-600 transition-colors duration-200"
+              className="p-2 rounded-full text-zinc-400 hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-600 transition-colors duration-200 "
               aria-label={`Current AI Mode: ${currentMode.label}. Click to change.`}
             >
-              <currentMode.icon size={20} /> {/* Display the icon of the current mode */}
+              <currentMode.icon size={20} />{" "}
+              {/* Display the icon of the current mode */}
             </button>
 
             {/* AI Mode Dropdown */}
             {showDropdown && (
               <div className="absolute bottom-full mb-2 left-0 w-48 bg-zinc-800 border border-zinc-700 rounded-lg shadow-lg z-50 overflow-hidden">
-                <div className="px-4 py-2 text-xs text-zinc-400 border-b border-zinc-700">
+                <div className=" px-4 py-2 text-xs text-zinc-400 border-b border-zinc-700">
                   Select AI Mode
                 </div>
                 {aiModes.map((mode) => (
@@ -72,10 +76,11 @@ export default function ChatInput({ onSendMessage, isLoading }) {
                     type="button"
                     onClick={() => handleModeChange(mode.value)}
                     className={`flex items-center gap-2 w-full text-left px-4 py-2 text-sm
-                                ${selectedMode === mode.value
-                        ? "bg-blue-600 text-white font-semibold" // Highlight selected mode more strongly
-                        : "text-zinc-200 hover:bg-zinc-700"
-                      } transition-colors duration-150`}
+                                ${
+                                  selectedMode === mode.value
+                                    ? "bg-blue-600 text-white font-semibold" // Highlight selected mode more strongly
+                                    : "text-zinc-200 hover:bg-zinc-700"
+                                } transition-colors duration-150`}
                   >
                     <mode.icon size={16} /> {/* Render the icon */}
                     {mode.label}
@@ -99,7 +104,7 @@ export default function ChatInput({ onSendMessage, isLoading }) {
           <button
             type="submit"
             disabled={!inputValue.trim() || isLoading}
-            className="p-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+            className="p-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 "
             aria-label="Send message"
           >
             <ArrowUp size={20} />
@@ -108,7 +113,7 @@ export default function ChatInput({ onSendMessage, isLoading }) {
           {/* Microphone Icon */}
           <button
             type="button"
-            className="p-2 rounded-full text-zinc-400 hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-600 transition-colors duration-200"
+            className="p-2 rounded-full text-zinc-400 hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-600 transition-colors duration-200 "
             aria-label="Voice input"
           >
             <Mic size={20} /> {/* Using the imported Mic icon */}

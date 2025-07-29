@@ -185,7 +185,7 @@ export default function Results({ prediction }) {
         <div className="text-center mb-8">
           <h2 className="text-4xl font-bold text-white mb-4 flex items-center justify-center gap-4">
             <span className="text-5xl animate-pulse">🔬</span>
-            Parkinson's Disease Progression Analysis
+            Parkinson&apos;s Disease Progression Analysis
             <span className="text-5xl animate-pulse">📊</span>
           </h2>
           <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full mx-auto w-64" />
@@ -237,7 +237,7 @@ export default function Results({ prediction }) {
             <div>
               <h3 className="text-xl font-semibold text-white mb-2">Clinical Assessment Summary</h3>
               <p className="text-white/90 text-lg leading-relaxed">
-                Your Parkinson's symptoms are projected to show{' '}
+                Your Parkinson&apos;s symptoms are projected to show{' '}
                 <span className={`font-bold ${progressionText[progression]?.color || 'text-white'}`}>
                   {progressionText[progression]?.text || 'progression analysis'}
                 </span>{' '}
@@ -416,7 +416,7 @@ export default function Results({ prediction }) {
         <div className="flex items-start gap-4">
           <span className="text-3xl">⚠️</span>
           <div>
-            <h4 className="text-lg font-semibold text-yellow-200 mb-2">Medical Disclaimer</h4>
+            <h4 className="text-lg font-semibold text-yellow-200 mb-2">SnowFlake Disclaimer</h4>
             <p className="text-yellow-100 text-sm leading-relaxed">
               This prediction model is designed for research purposes and should not replace professional medical advice. 
               The projections are based on current data patterns and may not account for individual variations, treatment responses, 
