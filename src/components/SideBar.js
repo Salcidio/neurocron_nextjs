@@ -80,16 +80,16 @@ export default function Sidebar({ onSignOut }) {
           <SidebarItem
             IconOutlined={BrainCircuit}
             IconFilled={BrainCircuit}
-            label="mri"
+            label="MRI"
             collapsed={collapsed}
             href="/mri"
           />
           <SidebarItem
             IconOutlined={Star}
             IconFilled={StarFill}
-            label="Favorites"
+            label="Flake"
             collapsed={collapsed}
-            href="/favorites"
+            href="/tinyflake"
           />
         </nav>
       </div>

@@ -39,7 +39,7 @@ export default function ParkinsonPredictor() {
       console.error("Error signing out:", error.message);
     }
   };
-
+// to be changed with real api call
   const handlePrediction = (data) => {
     setIsAnalyzing(true);
     setTimeout(() => {

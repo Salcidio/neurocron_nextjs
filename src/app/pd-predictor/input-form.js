@@ -8,6 +8,7 @@ import { MdPsychology } from 'react-icons/md';
 
 
 export default function InputForm({ onSubmit }) {
+  // formt o be sent to api and do make prediction
   const [formData, setFormData] = useState({
     patient_id: '',
     assessment_date: '',
