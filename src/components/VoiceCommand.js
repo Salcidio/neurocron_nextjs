@@ -8,16 +8,11 @@ export default function VoiceCommand() {
   const router = useRouter();
   const recognitionRef = useRef(null);
   const isListeningRef = useRef(false);
-  const shouldContinueListeningRef = useRef(true);
-
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [showSnackbar, setShowSnackbar] = useState(false);
+  const timeoutRef = useRef(null);
 
-  useEffect(() => {   
-     shouldContinueListeningRef.current = true; 
-
-    
-
+  useEffect(() => {
     if (
       typeof window === "undefined" ||
       !("webkitSpeechRecognition" in window)
@@ -29,25 +24,27 @@ export default function VoiceCommand() {
     const recognition = new webkitSpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = false;
-    recognition.lang = "en-US";
+    recognition.lang = "en-GB"; // 🇬🇧 British English
     recognitionRef.current = recognition;
 
+    const stopAfterFiveMinutes = () => {
+      timeoutRef.current = setTimeout(() => {
+        recognition.stop();
+        console.log("[Voice] Auto stopped after 5 minutes");
+        isListeningRef.current = false;
+      }, 5 * 60 * 1000); // 5 minutes
+    };
+
     const startRecognition = () => {
-      if (!isListeningRef.current && shouldContinueListeningRef.current) {
+      if (!isListeningRef.current) {
         try {
           recognition.start();
           isListeningRef.current = true;
           console.log("[Voice] Listening started");
+          stopAfterFiveMinutes();
         } catch (err) {
           console.warn("[Voice] Start error:", err);
         }
-      }
-    };
-
-    const restartRecognition = () => {
-      isListeningRef.current = false;
-      if (shouldContinueListeningRef.current) {
-        setTimeout(() => startRecognition(), 500);
       }
     };
 
@@ -57,18 +54,25 @@ export default function VoiceCommand() {
         .toLowerCase();
       console.log("[Voice] Heard:", transcript);
 
-      // Show the command in the Snackbar
       setSnackbarMessage(`You said: "${transcript}"`);
       setShowSnackbar(true);
 
-         if (transcript.includes("flake enter")) {
+      if (transcript.includes("flake enter")) {
         router.push("/auth");
       } else if (transcript.includes("flake register")) {
-        router.push("/register");
+        router.push("/auth");
+      } else if (transcript.includes("flake login")) {
+        router.push("/auth");
       } else if (transcript.includes("flake homepage")) {
         router.push("/");
       } else if (transcript.includes("go back")) {
         router.back();
+      } else if (transcript.includes("flake scan")) {
+        router.push("/scan");
+      } else if (transcript.includes("flake chat")) {
+        router.push("/chat");
+      } else if (transcript.includes("flake dasboard")) {
+        router.push("/dasboard");
       }
     };
 
@@ -80,34 +84,24 @@ export default function VoiceCommand() {
         event.error === "service-not-allowed"
       ) {
         console.warn("[Voice] Permission denied. Stopping forever.");
-        shouldContinueListeningRef.current = false;
         recognition.stop();
+        isListeningRef.current = false;
         return;
       }
-
-      restartRecognition();
     };
 
     recognition.onend = () => {
       console.log("[Voice] Recognition ended");
-      restartRecognition();
+      isListeningRef.current = false;
     };
 
     startRecognition();
 
     return () => {
-      shouldContinueListeningRef.current = false;
-      try {
-        recognition.stop();
-      } catch (err) {
-        console.log("[Voice] Stop error:", err);
-      }
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      recognition.stop();
     };
   }, [router]);
 
-  return (
-    <>
-      <Snackbar message={snackbarMessage} visible={showSnackbar} />
-    </>
-  );
+  return <Snackbar message={snackbarMessage} visible={showSnackbar} />;
 }

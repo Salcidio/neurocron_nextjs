@@ -2,14 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import VoiceCommand from "@/components/VoiceCommand";
 
 export default function NotFound() {
   const router = useRouter();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center">
-      <VoiceCommand />
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}

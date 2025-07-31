@@ -8,7 +8,6 @@ import { SiHuggingface } from "react-icons/si";
 import { TbBrandSupabase } from "react-icons/tb";
 import { FaReact } from "react-icons/fa6";
 import Link from "next/link";
-import VoiceCommand from "@/components/VoiceCommand";
 import { supabase } from "@/lib/supabaseClient";
 
 export default function Home() {
@@ -98,7 +97,6 @@ export default function Home() {
 
       <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
         <div className="max-w-4xl w-full">
-          <VoiceCommand />
 
           <div className="text-center mb-12">
             <motion.div
@@ -136,8 +134,8 @@ export default function Home() {
               transition={{ delay: 0.2 }}
               className="text-xl text-purple-200 mb-8 max-w-2xl mx-auto"
             >
-              Experience the future of AI conversation with our stunning Flake
-              ai realm. Powered by Hugging Face models, secured by Supabase, and
+              Experience the future of AI  with our stunning models
+               realm. Powered by Hugging Face models, secured by Supabase, and
               enhanced by Salcidio.
             </motion.p>
 
