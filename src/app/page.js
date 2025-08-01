@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import Link from "next/link";
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
@@ -353,7 +354,7 @@ const IntegratedFlakeHomePage = () => {
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div className="text-left">
               <p className="text-lg text-purple-200 leading-relaxed mb-6">
-                Flake AI is more than just a platform; it's a revolutionary
+                Flake AI is more than just a platform; it&apos;s a revolutionary
                 approach to artificial intelligence. We believe in empowering
                 creators with tools that are intuitive, powerful, and
                 beautifully designed.
@@ -463,10 +464,15 @@ const IntegratedFlakeHomePage = () => {
                   {partner.icon ? (
                     <partner.icon className="w-12 h-12 text-white" />
                   ) : (
-                    <img
+                    <Image
                       src={partner.logo}
                       alt={partner.name}
-                      className="w-12 h-12 object-contain filter brightness-0 invert"
+                      width={48}
+                      height={48}
+                      style={{
+                        objectFit: "contain",
+                        filter: "brightness(0) invert(1)",
+                      }}
                       onError={(e) => (e.target.style.display = "none")}
                     />
                   )}
