@@ -15,6 +15,12 @@ import {
   AlertCircle,
   Loader,
   XCircle,
+  ZoomIn,
+  ZoomOut,
+  Move,
+  Sun,
+  Moon,
+  Ruler,
 } from "lucide-react";
 
 const parseDicomFile = async (file) => {
@@ -269,7 +275,6 @@ const MRIReader = () => {
   const [rotation, setRotation] = useState(0);
   const [contrast, setContrast] = useState(100);
   const [brightness, setBrightness] = useState(100);
-  const [showGrid, setShowGrid] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [panPosition, setPanPosition] = useState({ x: 0, y: 0 });
   const [dicomData, setDicomData] = useState(null);
@@ -278,17 +283,32 @@ const MRIReader = () => {
   const [error, setError] = useState(null);
   const [loadingProgress, setLoadingProgress] = useState(0);
 
+  // Added state for new controls
+  const [activeTool, setActiveTool] = useState("pan");
+  const [windowCenter, setWindowCenter] = useState(null);
+  const [windowWidth, setWindowWidth] = useState(null);
+  const [invert, setInvert] = useState(false);
+  const [measurements, setMeasurements] = useState([]);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+
   const canvasRef = useRef(null);
   const fileInputRef = useRef(null);
   const playIntervalRef = useRef(null);
+  const viewerRef = useRef(null);
+  const mouseInteractionRef = useRef({
+    isMouseDown: false,
+    startPos: { x: 0, y: 0 },
+    startPan: { x: 0, y: 0 },
+  });
 
   const handleSignOut = async () => {
     setSigningOut(true);
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      // const { error } = await supabase.auth.signOut();
+      // if (error) throw error;
       console.log("User signed out successfully");
-      router.push("/");
+      // router.push("/");
       setSigningOut(false);
     } catch (error) {
       setSigningOut(false);
@@ -299,8 +319,8 @@ const MRIReader = () => {
   const renderDicomImage = useCallback(
     (pixelData, metadata) => {
       const canvas = canvasRef.current;
-      if (!canvas || !pixelData || !pixelData.data) {
-        console.warn("Canvas or pixel data not available for rendering.");
+      const viewerContainer = viewerRef.current;
+      if (!canvas || !pixelData || !pixelData.data || !viewerContainer) {
         return;
       }
 
@@ -308,68 +328,112 @@ const MRIReader = () => {
       const { data, rows, columns, bitsAllocated, pixelRepresentation } =
         pixelData;
 
-      // Set canvas dimensions to the image dimensions
-      canvas.width = columns;
-      canvas.height = rows;
-
-      // Create image data
-      const imageData = ctx.createImageData(columns, rows);
-      const pixels = imageData.data;
-
-      // Get window/level values for proper display
-      // Default values if not present or invalid
-      const windowCenter =
-        parseFloat(metadata.windowCenter) || 1 << (bitsAllocated - 1); // Default to half of max value
-      const windowWidth =
-        parseFloat(metadata.windowWidth) || (1 << bitsAllocated) - 1; // Default to full range
+      // Determine initial window/level values
+      const wc =
+        windowCenter ??
+        parseFloat(metadata.windowCenter) ??
+        1 << (bitsAllocated - 1);
+      const ww =
+        windowWidth ??
+        parseFloat(metadata.windowWidth) ??
+        (1 << bitsAllocated) - 1;
       const rescaleIntercept = parseFloat(metadata.rescaleIntercept) || 0;
       const rescaleSlope = parseFloat(metadata.rescaleSlope) || 1;
 
-      const windowMin = windowCenter - windowWidth / 2;
-      const windowMax = windowCenter + windowWidth / 2;
+      const windowMin = wc - ww / 2;
+      const windowMax = wc + ww / 2;
+
+      const imageData = new ImageData(columns, rows);
+      const pixels = imageData.data;
 
       for (let i = 0; i < data.length; i++) {
         let pixelValue = data[i];
 
-        // Handle signed pixel data if pixelRepresentation is 1 (2's complement)
-        if (pixelRepresentation === 1 && bitsAllocated === 16) {
-          // Convert unsigned 16-bit to signed 16-bit
-          pixelValue = (pixelValue << 16) >> 16;
-        } else if (pixelRepresentation === 1 && bitsAllocated === 8) {
-          pixelValue = (pixelValue << 24) >> 24;
+        if (pixelRepresentation === 1) {
+          // Signed
+          if (bitsAllocated === 16) pixelValue = (pixelValue << 16) >> 16;
+          else if (bitsAllocated === 8) pixelValue = (pixelValue << 24) >> 24;
         }
 
-        // Apply rescale slope and intercept
         pixelValue = pixelValue * rescaleSlope + rescaleIntercept;
 
-        // Apply window/level
         let displayValue;
         if (pixelValue <= windowMin) {
           displayValue = 0;
         } else if (pixelValue >= windowMax) {
           displayValue = 255;
         } else {
-          displayValue = ((pixelValue - windowMin) / windowWidth) * 255;
+          displayValue = ((pixelValue - windowMin) / ww) * 255;
         }
 
-        // Apply contrast and brightness adjustments (directly to pixel values before putting on canvas)
-        // These are multiplicative factors on the 0-255 range.
-        // A simple approach is: value' = ((value - 128) * contrast_factor) + 128) * brightness_factor
-        // Or, directly scale the displayValue.
-        // Let's keep it simple for now, applying directly to displayValue.
-        displayValue = displayValue * (contrast / 100) * (brightness / 100);
-        displayValue = Math.max(0, Math.min(255, displayValue)); // Clamp to 0-255
+        if (invert) {
+          displayValue = 255 - displayValue;
+        }
 
         const pixelIndex = i * 4;
-        pixels[pixelIndex] = displayValue; // R
-        pixels[pixelIndex + 1] = displayValue; // G
-        pixels[pixelIndex + 2] = displayValue; // B
-        pixels[pixelIndex + 3] = 255; // A
+        pixels[pixelIndex] = displayValue;
+        pixels[pixelIndex + 1] = displayValue;
+        pixels[pixelIndex + 2] = displayValue;
+        pixels[pixelIndex + 3] = 255;
       }
 
-      ctx.putImageData(imageData, 0, 0);
+      // Create an off-screen canvas to draw the raw image data
+      const imageCanvas = document.createElement("canvas");
+      imageCanvas.width = columns;
+      imageCanvas.height = rows;
+      imageCanvas.getContext("2d").putImageData(imageData, 0, 0);
+
+      const viewerWidth = viewerContainer.clientWidth;
+      const viewerHeight = viewerContainer.clientHeight;
+      const imageAspectRatio = columns / rows;
+      const viewerAspectRatio = viewerWidth / viewerHeight;
+
+      let canvasWidth, canvasHeight;
+
+      if (imageAspectRatio > viewerAspectRatio) {
+        canvasWidth = viewerWidth;
+        canvasHeight = viewerWidth / imageAspectRatio;
+      } else {
+        canvasHeight = viewerHeight;
+        canvasWidth = viewerHeight * imageAspectRatio;
+      }
+
+      // Resize the main canvas to the viewer dimensions
+      canvas.width = viewerWidth;
+      canvas.height = viewerHeight;
+      ctx.clearRect(0, 0, viewerWidth, viewerHeight);
+
+      // Center the image with pan and zoom
+      const drawX =
+        (viewerWidth - canvasWidth * (zoom / 100)) / 2 + panPosition.x;
+      const drawY =
+        (viewerHeight - canvasHeight * (zoom / 100)) / 2 + panPosition.y;
+
+      ctx.save();
+      ctx.translate(drawX, drawY);
+      ctx.scale(zoom / 100, zoom / 100);
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(imageCanvas, 0, 0, canvasWidth, canvasHeight);
+      ctx.restore();
+
+      // Draw measurements on top
+      measurements.forEach((m) => {
+        ctx.beginPath();
+        ctx.moveTo(m.start.x, m.start.y);
+        ctx.lineTo(m.end.x, m.end.y);
+        ctx.strokeStyle = "cyan";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        const dist = Math.sqrt(
+          Math.pow(m.end.x - m.start.x, 2) + Math.pow(m.end.y - m.start.y, 2)
+        ).toFixed(1);
+        ctx.fillStyle = "cyan";
+        ctx.font = "14px Arial";
+        ctx.fillText(`${dist} px`, m.end.x + 5, m.end.y - 5);
+      });
     },
-    [contrast, brightness]
+    [zoom, panPosition, windowCenter, windowWidth, invert, measurements]
   );
 
   const generateMockMRISlice = useCallback(
@@ -442,12 +506,6 @@ const MRIReader = () => {
         ctx.arc(x, y, 3, 0, Math.PI * 2);
         ctx.fill();
       }
-
-      // Filters for mock image are applied here, not by re-drawing
-      // The main renderDicomImage handles it by manipulating pixel data.
-      // For mock, we can apply directly to drawing operations or via CSS.
-      // Given the current structure, let's omit ctx.filter = ... ctx.drawImage(canvas,0,0) as it's redundant and problematic.
-      // CSS filters on the canvas element (applied in JSX style) would be more appropriate for mock image if pixel manipulation isn't done.
     },
     [totalSlices]
   );
@@ -462,24 +520,6 @@ const MRIReader = () => {
       generateMockMRISlice(currentSlice);
     }
   }, [currentSlice, renderDicomImage, generateMockMRISlice, dicomFiles]);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (canvas) {
-      // These are now handled by the parent div's transform style in JSX for visual effect
-      // If you want actual drawing context transformation, apply them here with ctx.
-      // For now, let's ensure the canvas itself is styled correctly for external CSS transforms
-      canvas.style.transform = `scale(${
-        zoom / 100
-      }) rotate(${rotation}deg) translate(${panPosition.x}px, ${
-        panPosition.y
-      }px)`;
-      // The contrast/brightness from state are handled by pixel manipulation in renderDicomImage,
-      // so no need for CSS filter on canvas for those if renderDicomImage is being used.
-      // If generateMockMRISlice also needs it, and isn't doing pixel manipulation, you could apply CSS filter here.
-      // canvas.style.filter = `contrast(${contrast}%) brightness(${brightness}%)`;
-    }
-  }, [zoom, rotation, panPosition]);
 
   const handleFileUpload = async (files) => {
     setIsLoading(true);
@@ -533,6 +573,9 @@ const MRIReader = () => {
           ? `Some files failed to parse: ${errorsOccurred.join(", ")}`
           : null
       );
+      setWindowCenter(parseFloat(parsedFiles[0].metadata.windowCenter) || null);
+      setWindowWidth(parseFloat(parsedFiles[0].metadata.windowWidth) || null);
+      setMeasurements([]);
     } catch (err) {
       setError(err.message);
       console.error("DICOM upload error:", err);
@@ -645,6 +688,8 @@ const MRIReader = () => {
       rows: meta.rows || "....",
       columns: meta.columns || "....",
       bitsAllocated: meta.bitsAllocated || "....",
+      windowCenter: windowCenter?.toFixed(2) ?? "N/A",
+      windowWidth: windowWidth?.toFixed(2) ?? "N/A",
     };
   };
 
@@ -656,8 +701,61 @@ const MRIReader = () => {
     )}`;
   };
 
-  const handleZoomIn = () => setZoom((prev) => Math.min(prev + 25, 400));
-  const handleZoomOut = () => setZoom((prev) => Math.max(prev - 25, 25));
+  // New mouse event handlers for pan, windowing, and measure tools
+  const handleMouseDown = (e) => {
+    if (!dicomData) return;
+    mouseInteractionRef.current.isMouseDown = true;
+    const rect = canvasRef.current.getBoundingClientRect();
+    const pos = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    mouseInteractionRef.current.startPos = pos;
+    mouseInteractionRef.current.startPan = { ...panPosition };
+    if (activeTool === "measure") {
+      setIsDrawing(true);
+      setMeasurements((prev) => [...prev, { start: pos, end: pos }]);
+    }
+  };
+
+  const handleMouseMove = (e) => {
+    if (!mouseInteractionRef.current.isMouseDown || !dicomData) return;
+
+    const { startPos, startPan } = mouseInteractionRef.current;
+    const rect = canvasRef.current.getBoundingClientRect();
+    const currentPos = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    const delta = {
+      x: currentPos.x - startPos.x,
+      y: currentPos.y - startPos.y,
+    };
+
+    if (activeTool === "pan") {
+      setPanPosition({ x: startPan.x + delta.x, y: startPan.y + delta.y });
+    } else if (activeTool === "windowing") {
+      const newWc = (windowCenter || 2048) - delta.y * 2;
+      const newWw = Math.max(1, (windowWidth || 4096) + delta.x * 2);
+      setWindowCenter(newWc);
+      setWindowWidth(newWw);
+    } else if (activeTool === "measure" && isDrawing) {
+      setMeasurements((prev) => {
+        const newMeasurements = [...prev];
+        newMeasurements[newMeasurements.length - 1].end = currentPos;
+        return newMeasurements;
+      });
+    }
+    // Update mouse position for display
+    setMousePos({ x: Math.round(currentPos.x), y: Math.round(currentPos.y) });
+  };
+
+  const handleMouseUp = () => {
+    mouseInteractionRef.current.isMouseDown = false;
+    if (activeTool === "measure") {
+      setIsDrawing(false);
+    }
+  };
+
+  const handleWheel = (e) => {
+    e.preventDefault();
+    const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
+    setZoom((prev) => Math.max(10, Math.min(800, prev * zoomFactor)));
+  };
 
   const resetView = () => {
     setZoom(100);
@@ -665,21 +763,13 @@ const MRIReader = () => {
     setPanPosition({ x: 0, y: 0 });
     setContrast(100);
     setBrightness(100);
-  };
-
-  const handleCanvasMouseMove = (e) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const rect = canvas.getBoundingClientRect();
-    // Calculate mouse position relative to the scaled and transformed canvas content
-    // This is simplified and assumes the canvas itself is transformed by CSS
-    // For precise pixel data lookup with transforms, you'd need to inverse the transforms.
-    // For now, it's just mouse position relative to the canvas element's displayed area.
-    const x = (e.clientX - rect.left) / (zoom / 100) - panPosition.x;
-    const y = (e.clientY - rect.top) / (zoom / 100) - panPosition.y;
-
-    setMousePos({ x: Math.round(x), y: Math.round(y) });
+    setMeasurements([]);
+    setInvert(false);
+    if (dicomFiles.length > 0 && dicomFiles[currentSlice]) {
+      const metadata = dicomFiles[currentSlice].metadata;
+      setWindowCenter(parseFloat(metadata.windowCenter));
+      setWindowWidth(parseFloat(metadata.windowWidth));
+    }
   };
 
   return (
@@ -708,13 +798,12 @@ const MRIReader = () => {
       <div className="relative z-10">
         {/* Header */}
         <header className="bg-slate-900/90 backdrop-blur-sm border-b border-blue-500/30 p-4">
-          <div className="flex items-center justify-between max-w-7xl mx-auto">
+          <div className="flex items-center justify-center max-w-7xl mx-auto">
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
-                <Brain className="w-8 h-8 text-blue-400" />
                 <div>
-                  <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
-                    Flake Laboratories
+                  <h1 className=" text-2xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+                    Flake AI
                   </h1>
                 </div>
               </div>
@@ -727,90 +816,63 @@ const MRIReader = () => {
           <div className="w-40 bg-slate-900/50 backdrop-blur-sm border-r border-blue-500/30 p-4 space-y-4">
             <div className="flex space-x-2">
               <button
-                onClick={() => setShowGrid(!showGrid)}
-                className={`flex-1 p-2 rounded-lg border transition-all duration-200 ${
-                  showGrid
-                    ? "bg-blue-600/30 border-blue-400"
-                    : "bg-slate-800/50 border-slate-600"
-                }`}
-              >
-                <Grid3X3 className="w-4 h-4 mx-auto" />
-              </button>
-
-              <button
                 onClick={resetView}
                 className="flex-1 p-2 text-sm bg-slate-700 hover:bg-slate-600 rounded-lg border border-slate-600 transition-all duration-200"
               >
                 Reset
               </button>
             </div>
-            {/* Image Controls */}
-            <div className="space-y-4">
-              <div className="space-y-3">
-                <h2 className="flex items-center justify-center text-lg  font-semibold text-blue-300">
-                  Controls
-                </h2>
 
-                <div>
-                  <label className="flex items-center justify-center text-sm text-slate-300 py-3">
-                    Zoom: {zoom}%
-                  </label>
-                  <div className="flex space-x-2">
-                    <input
-                      type="range"
-                      min="25"
-                      max="400"
-                      value={zoom}
-                      onChange={(e) => setZoom(parseInt(e.target.value))}
-                      className="custom-range-slider"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="flex items-center justify-center text-sm text-slate-300 py-3">
-                    Contrast: {contrast}%
-                  </label>
-                  <input
-                    type="range"
-                    min="50"
-                    max="200"
-                    value={contrast}
-                    onChange={(e) => setContrast(parseInt(e.target.value))}
-                    className="custom-range-slider"
-                  />
-                </div>
-
-                <div>
-                  <label className="flex items-center justify-center text-sm text-slate-300 py-3">
-                    Brightness: {brightness}%
-                  </label>
-                  <input
-                    type="range"
-                    min="50"
-                    max="200"
-                    value={brightness}
-                    onChange={(e) => setBrightness(parseInt(e.target.value))}
-                    className="custom-range-slider"
-                  />
-                </div>
-
-                <div>
-                  <label className="flex items-center justify-center text-sm text-slate-300 py-3">
-                    Rotation: {rotation}°
-                  </label>
-                  <div className="flex space-x-2">
-                    <input
-                      type="range"
-                      min="0"
-                      max="360"
-                      value={rotation}
-                      onChange={(e) => setRotation(parseInt(e.target.value))}
-                      className="custom-range-slider"
-                    />
-                  </div>
-                </div>
-              </div>
+            {/* New Tool Buttons */}
+            <div className="flex flex-col space-y-2">
+              <button
+                title="Pan (Move)"
+                onClick={() => setActiveTool("pan")}
+                className={`p-3 rounded-lg border transition-all ${
+                  activeTool === "pan"
+                    ? "bg-blue-600/40 border-blue-400"
+                    : "bg-slate-800 border-slate-600"
+                }`}
+              >
+                {" "}
+                <Move className="w-5 h-5 mx-auto" />{" "}
+              </button>
+              <button
+                title="Windowing (Contrast/Brightness)"
+                onClick={() => setActiveTool("windowing")}
+                className={`p-3 rounded-lg border transition-all ${
+                  activeTool === "windowing"
+                    ? "bg-blue-600/40 border-blue-400"
+                    : "bg-slate-800 border-slate-600"
+                }`}
+              >
+                {" "}
+                <Sun className="w-5 h-5 mx-auto" />{" "}
+              </button>
+              <button
+                title="Measure"
+                onClick={() => setActiveTool("measure")}
+                className={`p-3 rounded-lg border transition-all ${
+                  activeTool === "measure"
+                    ? "bg-blue-600/40 border-blue-400"
+                    : "bg-slate-800 border-slate-600"
+                }`}
+              >
+                {" "}
+                <Ruler className="w-5 h-5 mx-auto" />{" "}
+              </button>
+              <button
+                title="Invert Colors"
+                onClick={() => setInvert(!invert)}
+                className={`p-3 rounded-lg border transition-all ${
+                  invert
+                    ? "bg-purple-600/40 border-purple-400"
+                    : "bg-slate-800 border-slate-600"
+                }`}
+              >
+                {" "}
+                <Moon className="w-5 h-5 mx-auto" />{" "}
+              </button>
             </div>
           </div>
 
@@ -920,53 +982,25 @@ const MRIReader = () => {
 
             {/* Image Viewer */}
             {dicomData != null ? (
-              <div className="flex-1 relative bg-blue overflow-hidden flex items-center justify-center">
-                <div
-                  className="relative flex items-center justify-center h-full w-full" // Use h-full w-full to fill parent div
-                >
-                  <canvas
-                    ref={canvasRef}
-                    className="border border-blue-500/30 shadow-2xl cursor-crosshair max-w-full max-h-full" // Added max-width/height
-                    onMouseMove={handleCanvasMouseMove}
-                    // Apply transforms directly to the canvas for display
-                    style={{
-                      transform: `scale(${
-                        zoom / 100
-                      }) rotate(${rotation}deg) translate(${panPosition.x}px, ${
-                        panPosition.y
-                      }px)`,
-                      imageRendering: "pixelated", // Improves sharp pixel scaling
-                    }}
-                  />
-
-                  {/* Grid Overlay */}
-                  {showGrid && (
-                    <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                      {/* Position the grid overlay relative to the canvas, and scale/rotate it */}
-                      <div
-                        className="relative"
-                        style={{
-                          width: canvasRef.current?.width || 512,
-                          height: canvasRef.current?.height || 512,
-                          transform: `scale(${
-                            zoom / 100
-                          }) rotate(${rotation}deg) translate(${
-                            panPosition.x
-                          }px, ${panPosition.y}px)`,
-                        }}
-                      >
-                        <div className="grid grid-cols-8 grid-rows-8 h-full w-full opacity-30">
-                          {Array.from({ length: 64 }).map((_, i) => (
-                            <div
-                              key={i}
-                              className="border border-blue-400/50"
-                            ></div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
+              <div
+                ref={viewerRef}
+                className="flex-1 relative bg-black overflow-hidden flex items-center justify-center"
+              >
+                <canvas
+                  ref={canvasRef}
+                  onMouseDown={handleMouseDown}
+                  onMouseMove={handleMouseMove}
+                  onMouseUp={handleMouseUp}
+                  onMouseLeave={handleMouseUp}
+                  onWheel={handleWheel}
+                  className={`h-full w-full ${
+                    activeTool === "measure"
+                      ? "cursor-crosshair"
+                      : activeTool === "pan"
+                      ? "cursor-move"
+                      : "cursor-grab"
+                  }`}
+                />
 
                 {/* Status Bar */}
                 <div className="absolute bottom-4 left-4 bg-slate-900/80 backdrop-blur-sm rounded-lg p-2 border border-blue-500/30">
