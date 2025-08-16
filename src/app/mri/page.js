@@ -979,31 +979,36 @@ const MRIReader = () => {
                 </div>
               </div>
             ) : (
-              <div>
-                <div className="flex justify-center items-center py-10">
-                  <div className="absolute inset-0  rounded-full blur-xl opacity-50 animate-pulse"></div>
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{
-                      repeat: Infinity,
-                      duration: 8,
-                      ease: "linear",
-                    }}
-                    className="bg-gradient-to-r from-blue-500 to-cyan-500 p-6 rounded-full w-fit"
-                  >
-                    <FaSnowflake className="w-16 h-16 text-white" />
-                  </motion.div>
-                </div>
-                <div className="flex justify-center items-center py-5">
-                  
-                  <motion.h1
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                    className="text-6xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent mb-6 animate-gradient"
-                  >
-                    Flake Laboratories
-                  </motion.h1>
+              <div className="flex-1 relative bg-blue overflow-hidden flex items-center justify-center">
+                <div
+                  className="relative flex items-center justify-center h-full w-full" // Use h-full w-full to fill parent div
+                >
+                  <div>
+                    <div className="flex justify-center items-center py-10">
+                      <div className="absolute inset-0  rounded-full blur-xl opacity-50 animate-pulse"></div>
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{
+                          repeat: Infinity,
+                          duration: 8,
+                          ease: "linear",
+                        }}
+                        className="bg-gradient-to-r from-blue-500 to-cyan-500 p-6 rounded-full w-fit"
+                      >
+                        <FaSnowflake className="w-16 h-16 text-white" />
+                      </motion.div>
+                    </div>
+                    <div className="flex justify-center items-center py-5">
+                      <motion.h1
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="text-6xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent mb-6 animate-gradient"
+                      >
+                        Flake Laboratories
+                      </motion.h1>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
