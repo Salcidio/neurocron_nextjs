@@ -1,5 +1,4 @@
 "use client";
-import Image from "next/image";
 import Link from "next/link";
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
@@ -7,20 +6,8 @@ import { Sparkles, Brain, Zap, MessageCircle, ArrowRight } from "lucide-react";
 import { FaSnowflake, FaDocker, FaReact } from "react-icons/fa";
 import {
   SiHuggingface,
-  SiOpenai,
-  SiGoogleai,
-  SiLlama,
-  SiGooglecolab,
-  SiLenovo,
-  SiNpm,
-  SiFastapi,
-  SiNextdotjs,
-  SiVercel,
-  SiGithubcopilot,
-  SiGooglechrome,
 } from "react-icons/si";
-import { TbBrandSupabase, TbBrandX } from "react-icons/tb";
-import { FcGoogle } from "react-icons/fc";
+import { TbBrandSupabase } from "react-icons/tb";
 
 const scrollToSection = (id) => {
   const element = document.getElementById(id);
@@ -93,97 +80,43 @@ const IntegratedFlakeHomePage = () => {
     };
   }, [handleScroll]);
 
-  // Enhanced partners data
+  //  partners data
   const partners = [
     {
+      name: "Github",
+      path: "partners/github.svg",
+    },
+    {
       name: "React",
-      logo: "https://upload.wikimedia.org/wikipedia/commons/a/a7/React-icon.svg",
-      icon: FaReact,
+      path: "partners/react.svg",
     },
     {
       name: "Hugging Face",
-      logo: "https://huggingface.co/front/assets/huggingface_logo.svg",
-      icon: SiHuggingface,
+      path: "partners/huggingface.svg",
     },
     {
       name: "Docker",
-      logo: "https://www.docker.com/wp-content/uploads/2022/03/vertical-logo-monochromatic.png",
-      icon: FaDocker,
+      path: "partners/docker.svg",
     },
     {
-      name: "Supabase",
-      logo: "https://supabase.com/brand-assets/supabase-logo-icon.png",
-      icon: TbBrandSupabase,
-    },
-    {
-      name: "OpenAI",
-      logo: "https://cdn.simpleicons.org/openai/ffffff",
-      icon: SiOpenai,
-    },
-    {
-      name: "Google ",
-      logo: "https://cdn.simpleicons.org/googleai/ffffff",
-      icon: FcGoogle,
-    },
-    {
-      name: "Grok",
-      logo: "https://cdn.simpleicons.org/grok/ffffff",
-      icon: TbBrandX,
-    },
-
-    {
-      name: "Gemini",
-      logo: "https://cdn.simpleicons.org/googlegemini/ffffff",
-      icon: SiGoogleai,
-    },
-    {
-      name: "Llama",
-      logo: "ollama.svg",
-      icon: SiLlama,
-    },
-    {
-      name: "Colab",
-      logo: "https://cdn.simpleicons.org/googlecolab/ffffff",
-      icon: SiGooglecolab,
-    },
-    {
-      name: "Lenovo",
-      logo: "lenovo.svg",
-      icon: SiLenovo,
-    },
-    {
-      name: "NPM",
-      logo: "npm.svg",
-      icon: SiNpm,
-    },
-    {
-      name: "FastAPI",
-      logo: "fastapi.svg",
-      icon: SiFastapi,
+      name: "Vercel",
+      path: "partners/vercel.svg",
     },
 
     {
       name: "Next.js",
-      logo: "nextdotjs.svg",
-      icon: SiNextdotjs,
-    },
-
-    {
-      name: "Vercel",
-      logo: "vercel.svg",
-      icon: SiVercel,
+      path: "partners/nextjs.svg",
     },
     {
-      name: "Copilot",
-      logo: "copilot.svg",
-      icon: SiGithubcopilot,
+      name: "NPM",
+      path: "partners/npm.svg",
     },
     {
-      name: "Github",
-      logo: "github.svg",
-      icon: SiGithubcopilot,
+      name: "Llama",
+      path: "partners/ollama.svg",
     },
   ];
+
   const techStack = [
     { icon: FaDocker, text: "Docker", color: "from-blue-400 to-blue-600" },
     {
@@ -442,7 +375,7 @@ const IntegratedFlakeHomePage = () => {
         </div>
       </section>
 
-      {/* Enhanced Partners Section */}
+      {/*  Partners Section */}
       <section
         id="partners"
         ref={partnersRef}
@@ -461,21 +394,13 @@ const IntegratedFlakeHomePage = () => {
             <div className="marquee__content">
               {[...partners, ...partners].map((partner, i) => (
                 <div key={i} className="partner-item">
-                  {partner.icon ? (
-                    <partner.icon className="w-12 h-12 text-white" />
-                  ) : (
-                    <Image
-                      src={partner.logo}
-                      alt={partner.name}
-                      width={48}
-                      height={48}
-                      style={{
-                        objectFit: "contain",
-                        filter: "brightness(0) invert(1)",
-                      }}
-                      onError={(e) => (e.target.style.display = "none")}
-                    />
-                  )}
+                  <img
+                    src={partner.path}
+                    alt={partner.name}
+                    width={50}
+                    height={50}
+                  />
+
                   <p className="text-sm font-medium text-purple-200 mt-2">
                     {partner.name}
                   </p>
@@ -537,7 +462,7 @@ const IntegratedFlakeHomePage = () => {
         </div>
       </footer>
 
-      {/* Enhanced CSS Animations */}
+      {/*  CSS Animations */}
       <style jsx>{`
         .marquee {
           position: relative;
@@ -547,7 +472,7 @@ const IntegratedFlakeHomePage = () => {
         .marquee__content {
           display: grid;
           grid-auto-flow: column;
-          grid-auto-columns: 12rem; /* match your .partner-item width */
+          grid-auto-columns: 15rem; /* match your .partner-item width */
           gap: 2rem; /* optional spacing */
           animation: marquee 30s linear infinite;
         }

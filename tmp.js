@@ -1,44 +1,64 @@
-
 "use client";
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import Image from "next/image";
+import Link from "next/link";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { motion } from "framer-motion";
+import { Sparkles, Brain, Zap, MessageCircle, ArrowRight } from "lucide-react";
+import { FaSnowflake, FaDocker, FaReact } from "react-icons/fa";
+import {
+  SiHuggingface,
+  SiOpenai,
+  SiGoogleai,
+  SiLlama,
+  SiGooglecolab,
+  SiLenovo,
+  SiNpm,
+  SiFastapi,
+  SiNextdotjs,
+  SiVercel,
+  SiGithubcopilot,
+} from "react-icons/si";
+import { TbBrandSupabase, TbBrandX } from "react-icons/tb";
+import { FcGoogle } from "react-icons/fc";
 
-// Helper function for smooth scrolling (optional, but good for UX)
 const scrollToSection = (id) => {
   const element = document.getElementById(id);
   if (element) {
     window.scrollTo({
-      top: element.offsetTop - 80, // Adjust for sticky header height
-      behavior: 'smooth',
+      top: element.offsetTop - 80,
+      behavior: "smooth",
     });
   }
 };
 
-const FlakeHomePage = () => {
+const IntegratedFlakeHomePage = () => {
   const [scrollY, setScrollY] = useState(0);
   const [headerShrunk, setHeaderShrunk] = useState(false);
+  const [isClient, setIsClient] = useState(false);
 
-  // Refs for sections to trigger animations based on visibility
+  // Refs for sections
   const aboutRef = useRef(null);
   const featuresRef = useRef(null);
-  const partnersRef = useRef(null); // Ref for partners section
+  const partnersRef = useRef(null);
   const ctaRef = useRef(null);
 
   // State for section visibility
   const [aboutVisible, setAboutVisible] = useState(false);
   const [featuresVisible, setFeaturesVisible] = useState(false);
-  const [partnersVisible, setPartnersVisible] = useState(false); // State for partners section
+  const [partnersVisible, setPartnersVisible] = useState(false);
   const [ctaVisible, setCtaVisible] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const handleScroll = useCallback(() => {
     const currentScrollY = window.scrollY;
     setScrollY(currentScrollY);
+    setHeaderShrunk(currentScrollY > 80);
 
-    // Header shrink logic
-    setHeaderShrunk(currentScrollY > 80); // Shrink header after scrolling 80px
-
-    // Intersection Observer for section animations
     const checkVisibility = (entries) => {
-      entries.forEach(entry => {
+      entries.forEach((entry) => {
         if (entry.target === aboutRef.current) {
           setAboutVisible(entry.isIntersecting);
         } else if (entry.target === featuresRef.current) {
@@ -51,308 +71,351 @@ const FlakeHomePage = () => {
       });
     };
 
-    // Create a single observer instance and reuse it
     const observer = new IntersectionObserver(checkVisibility, {
-      threshold: 0.2, // Trigger when 20% of the element is visible
+      threshold: 0.2,
     });
 
-    // Observe all relevant sections
     if (aboutRef.current) observer.observe(aboutRef.current);
     if (featuresRef.current) observer.observe(featuresRef.current);
     if (partnersRef.current) observer.observe(partnersRef.current);
     if (ctaRef.current) observer.observe(ctaRef.current);
 
-    // The cleanup is handled in the useEffect return function,
-    // so no need to return a disconnect function here.
-  }, []); // Dependencies are stable, so useCallback is effective
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
-    window.addEventListener('scroll', handleScroll);
-    // Initial check for visibility on mount
+    window.addEventListener("scroll", handleScroll);
     handleScroll();
 
-    // Cleanup function for the effect
     return () => {
-      window.removeEventListener('scroll', handleScroll);
-      // Disconnect all observers when the component unmounts
-      const observer = new IntersectionObserver(() => {}, { threshold: 0.2 }); // Dummy callback for disconnecting
-      if (aboutRef.current) observer.unobserve(aboutRef.current);
-      if (featuresRef.current) observer.unobserve(featuresRef.current);
-      if (partnersRef.current) observer.unobserve(partnersRef.current);
-      if (ctaRef.current) observer.unobserve(ctaRef.current);
-      observer.disconnect();
+      window.removeEventListener("scroll", handleScroll);
     };
   }, [handleScroll]);
 
-  // Calculate logo letter transformations based on scrollY
-  const getLetterTransform = (index) => {
-    const baseOffset = scrollY * 0.3; // Adjust sensitivity
-    let translateX = 0;
-    let translateY = 0;
-    let rotate = 0;
-
-    switch (index) {
-      case 0: // F
-        translateX = -baseOffset * 0.5;
-        translateY = -baseOffset * 0.3;
-        rotate = -baseOffset * 0.05;
-        break;
-      case 1: // L
-        translateX = baseOffset * 0.2;
-        translateY = -baseOffset * 0.4;
-        rotate = baseOffset * 0.03;
-        break;
-      case 2: // A
-        translateX = -baseOffset * 0.1;
-        translateY = baseOffset * 0.2;
-        rotate = -baseOffset * 0.02;
-        break;
-      case 3: // K
-        translateX = baseOffset * 0.4;
-        translateY = baseOffset * 0.1;
-        rotate = baseOffset * 0.04;
-        break;
-      case 4: // E
-        translateX = -baseOffset * 0.3;
-        translateY = baseOffset * 0.3;
-        rotate = -baseOffset * 0.06;
-        break;
-      default:
-        break;
-    }
-
-    return {
-      transform: `translate(${translateX}px, ${translateY}px) rotate(${rotate}deg)`,
-      opacity: Math.max(0.2, 1 - scrollY / 500), // Fade out slightly
-      transition: 'transform 0.1s ease-out, opacity 0.1s ease-out', // Smooth transition for scroll
-    };
-  };
-
-  // Partner logos data with real trademark URLs
+  //  partners data
   const partners = [
-    { name: 'React', logo: 'https://upload.wikimedia.org/wikipedia/commons/a/a7/React-icon.svg' },
-    { name: 'Next.js', logo: 'https://upload.wikimedia.org/wikipedia/commons/8/8e/Nextjs-logo.svg' },
-    { name: 'Hugging Face', logo: 'https://huggingface.co/front/assets/huggingface_logo.svg' },
-    { name: 'Google Cloud AI', logo: 'https://upload.wikimedia.org/wikipedia/commons/e/e5/Google_Cloud_logo.svg' },
-    { name: 'Azure AI', logo: 'https://upload.wikimedia.org/wikipedia/commons/f/fa/Microsoft_Azure_Logo.svg' },
-    { name: 'AWS AI', logo: 'https://upload.wikimedia.org/wikipedia/commons/9/93/Amazon_Web_Services_Logo.svg' },
-    { name: 'OpenAI', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/OpenAI_Logo.svg/1200px-OpenAI_Logo.svg.png' },
-    { name: 'Orender', logo: 'https://www.orender.com/wp-content/uploads/2023/07/orender_logo_1000px.png' }, // Placeholder, actual logo might be different
-    { name: 'Grok', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Grok_Logo.svg/1200px-Grok_Logo.svg.png' },
-    { name: 'Groq', logo: 'https://groq.com/wp-content/uploads/2023/11/groq-logo-dark.svg' },
-    { name: 'VSCode', logo: 'https://upload.wikimedia.org/wikipedia/commons/9/9a/Visual_Studio_Code_1.35_icon.svg' },
-    { name: 'Claude AI', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Claude_AI_logo.svg/1200px-Claude_AI_logo.svg.png' },
-    { name: 'Copilot', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/GitHub_Copilot_logo.svg/1200px-GitHub_Copilot_logo.svg.png' },
-    { name: 'Gemini', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Google_Gemini_logo.svg/1200px-Google_Gemini_logo.svg.png' },
+    {
+      name: "Github",
+      path: "partners/github.svg",
+    },
+    {
+      name: "React",
+      path: "partners/react.svg",
+    },
+    {
+      name: "Hugging Face",
+      path: "partners/huggingface.svg",
+    },
+    {
+      name: "Docker",
+      path: "partners/docker.svg",
+    },
+    {
+      name: "Vercel",
+      path: "partners/vercel.svg",
+    },
+
+    {
+      name: "Next.js",
+      path: "partners/nextjs.svg",
+    },
+    {
+      name: "NPM",
+      path: "partners/npm.svg",
+    },
+    {
+      name: "Llama",
+      path: "partners/ollama.svg",
+    },
+  ];
+
+  const techStack = [
+    { icon: FaDocker, text: "Docker", color: "from-blue-400 to-blue-600" },
+    {
+      icon: SiHuggingface,
+      text: "HuggingFace",
+      color: "from-yellow-400 to-orange-500",
+    },
+    {
+      icon: TbBrandSupabase,
+      text: "Supabase",
+      color: "from-green-400 to-emerald-600",
+    },
+    { icon: FaReact, text: "React", color: "from-cyan-400 to-blue-500" },
   ];
 
   return (
-    <div className="font-inter bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen text-gray-800">
-      {/* Sticky Header */}
+    <div className="font-inter bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 min-h-screen text-white overflow-hidden">
+      {/* Background Effects */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl animate-pulse"></div>
+
+        {/* Enhanced Floating Elements */}
+        {isClient &&
+          [...Array(30)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute animate-float"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 5}s`,
+                animationDuration: `${3 + Math.random() * 4}s`,
+              }}
+            >
+              {i % 5 === 0 && (
+                <Sparkles className="w-3 h-3 text-purple-400 opacity-60" />
+              )}
+              {i % 5 === 1 && (
+                <Zap className="w-3 h-3 text-yellow-400 opacity-60" />
+              )}
+              {i % 5 === 2 && (
+                <Brain className="w-3 h-3 text-blue-400 opacity-60" />
+              )}
+              {i % 5 === 3 && (
+                <MessageCircle className="w-3 h-3 text-pink-400 opacity-60" />
+              )}
+              {i % 5 === 4 && (
+                <FaSnowflake className="w-3 h-3 text-cyan-400 opacity-60" />
+              )}
+            </div>
+          ))}
+      </div>
+
+      {/* Enhanced Sticky Header */}
       <header
         className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ease-in-out ${
           headerShrunk
-            ? 'bg-white shadow-lg py-3'
-            : 'bg-transparent py-6'
+            ? "bg-black/80 backdrop-blur-lg shadow-lg py-3 border-b border-white/10"
+            : "bg-transparent py-6"
         }`}
       >
         <nav className="container mx-auto flex justify-between items-center px-6">
-          <div className="text-2xl font-bold text-indigo-600">Flake</div>
-          <ul className="flex space-x-6">
-            <li>
-              <button
-                onClick={() => scrollToSection('hero')}
-                className="text-gray-700 hover:text-indigo-600 transition-colors duration-200"
-              >
-                Home
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => scrollToSection('about')}
-                className="text-gray-700 hover:text-indigo-600 transition-colors duration-200"
-              >
-                About
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => scrollToSection('features')}
-                className="text-gray-700 hover:text-indigo-600 transition-colors duration-200"
-              >
-                Features
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => scrollToSection('partners')}
-                className="text-gray-700 hover:text-indigo-600 transition-colors duration-200"
-              >
-                Partners
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => scrollToSection('contact')}
-                className="text-gray-700 hover:text-indigo-600 transition-colors duration-200"
-              >
-                Contact
-              </button>
-            </li>
+          <div className="flex items-center space-x-3">
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full blur-sm opacity-50"></div>
+              <FaSnowflake className="w-8 h-8 text-white relative z-10" />
+            </div>
+            <span className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
+              Flake AI
+            </span>
+          </div>
+          <ul className="flex space-x-8">
+            {["Home", "About", "Features", "Partners", "Contact"].map(
+              (item) => (
+                <li key={item}>
+                  <button
+                    onClick={() =>
+                      scrollToSection(
+                        item.toLowerCase() === "home"
+                          ? "hero"
+                          : item.toLowerCase()
+                      )
+                    }
+                    className="text-gray-300 hover:text-white transition-all duration-200 relative group cursor-pointer"
+                  >
+                    {item}
+                    <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-400 to-cyan-400 transition-all duration-200 group-hover:w-full"></span>
+                  </button>
+                </li>
+              )
+            )}
           </ul>
         </nav>
       </header>
 
-      {/* Hero Section */}
+      {/* Enhanced Hero Section */}
       <section
         id="hero"
         className="relative h-screen flex items-center justify-center overflow-hidden"
       >
-        {/* Parallax Background Element */}
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{
-            backgroundImage: `url(https://placehold.co/1920x1080/E0F2F7/2C5282?text=Flake+Background)`,
-            transform: `translateY(${scrollY * 0.2}px)`, // Parallax effect
-            transition: 'transform 0.1s ease-out',
-          }}
-        ></div>
+        <div className="relative z-10 text-center max-w-6xl mx-auto px-6">
+          {/* AI Logo Animation */}
+          <div className="relative inline-block mb-8">
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full blur-xl opacity-50 animate-pulse"></div>
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{
+                repeat: Infinity,
+                duration: 8,
+                ease: "linear",
+              }}
+              className="bg-gradient-to-r from-blue-500 to-cyan-500 p-6 rounded-full w-fit"
+            >
+              <FaSnowflake className="w-16 h-16 text-white" />
+            </motion.div>
+          </div>
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="text-6xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent mb-6 animate-gradient"
+          >
+            Flake ai{" "}
+          </motion.h1>
 
-        <div className="relative z-10 text-center">
-          <h1 className="text-8xl md:text-9xl font-extrabold text-white drop-shadow-lg mb-8">
-            {'FLAKE'.split('').map((char, index) => (
-              <span
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="text-xl font-bold text-purple-200 mb-8 max-w-2xl mx-auto"
+          >
+            Experience the future of AI with our stunning models realm. Powered
+            by Hugging Face models, secured by Supabase, and enhanced by
+            Salcidio.
+          </motion.p>
+
+          {/* Tech Stack Pills */}
+          <div className="flex flex-wrap justify-center gap-4 mb-12">
+            {techStack.map((tech, index) => (
+              <div
                 key={index}
-                style={getLetterTransform(index)}
-                className="inline-block"
+                className={`flex items-center space-x-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded border border-white/20 hover:scale-110 transition-all duration-300 cursor-pointer hover:bg-white/20`}
               >
-                {char}
-              </span>
+                <tech.icon className="w-5 h-5 text-white" />
+                <span className="text-white font-medium">{tech.text}</span>
+              </div>
             ))}
-          </h1>
-          <p className="text-white text-xl md:text-2xl max-w-2xl mx-auto drop-shadow-md">
-            Unleash the power of effortless creation with Flake.
-            Experience seamless design and unparalleled performance.
-          </p>
-          <button className="mt-10 px-8 py-4 bg-indigo-600 text-white text-lg font-semibold rounded-full shadow-lg hover:bg-indigo-700 transition-all duration-300 ease-in-out transform hover:scale-105">
-            Discover Flake
-          </button>
+          </div>
         </div>
       </section>
 
-      {/* About Section */}
+      {/* Enhanced About Section */}
       <section
         id="about"
         ref={aboutRef}
-        className={`py-20 bg-white shadow-inner transform transition-all duration-1000 ease-out ${
-          aboutVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'
+        className={`py-20 bg-black/20 backdrop-blur-sm border-y border-white/10 transform transition-all duration-1000 ease-out ${
+          aboutVisible
+            ? "translate-y-0 opacity-100"
+            : "translate-y-20 opacity-0"
         }`}
       >
-        <div className="container mx-auto px-6 text-center max-w-3xl">
-          <h2 className="text-4xl font-bold text-indigo-700 mb-8">
-            About Flake
+        <div className="container mx-auto px-6 text-center max-w-4xl">
+          <h2 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent mb-8">
+            About Flake AI
           </h2>
-          <p className="text-lg text-gray-700 leading-relaxed">
-            Flake is more than just a platform; it's a philosophy. We believe
-            in empowering creators with tools that are intuitive, powerful,
-            and beautifully designed. Our mission is to simplify complex
-            processes, allowing you to focus on what truly matters: bringing
-            your ideas to life. From robust backend solutions to stunning
-            frontend experiences, Flake provides a comprehensive ecosystem
-            tailored for modern development.
-          </p>
-          <p className="text-lg text-gray-700 leading-relaxed mt-4">
-            Join a community of innovators and experience the next generation
-            of digital creation. With Flake, your imagination is the only limit.
-          </p>
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div className="text-left">
+              <p className="text-lg text-purple-200 leading-relaxed mb-6">
+                Flake AI is more than just a platform; it&apos;s a revolutionary
+                approach to artificial intelligence. We believe in empowering
+                creators with tools that are intuitive, powerful, and
+                beautifully designed.
+              </p>
+              <p className="text-lg text-purple-200 leading-relaxed">
+                Our mission is to bridge the gap between complex AI technology
+                and everyday users, making advanced AI accessible to everyone
+                through elegant design and seamless integration.
+              </p>
+            </div>
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-cyan-500/20 rounded-2xl blur-xl"></div>
+              <div className="relative bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10">
+                <Brain className="w-16 h-16 text-purple-400 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold mb-4 text-white">
+                  AI-First Design
+                </h3>
+                <p className="text-purple-200">
+                  Built from the ground up with artificial intelligence at its
+                  core.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* Features Section */}
+      {/* Enhanced Features Section */}
       <section
         id="features"
         ref={featuresRef}
-        className={`py-20 bg-gradient-to-br from-blue-50 to-indigo-100 transform transition-all duration-1000 ease-out ${
-          featuresVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'
+        className={`py-20 transform transition-all duration-1000 ease-out ${
+          featuresVisible
+            ? "translate-y-0 opacity-100"
+            : "translate-y-20 opacity-0"
         }`}
       >
         <div className="container mx-auto px-6">
-          <h2 className="text-4xl font-bold text-indigo-700 text-center mb-12">
-            Key Features
+          <h2 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent text-center mb-12">
+            AI-Powered Features
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-            {/* Feature 1 */}
-            <div className="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 transform hover:-translate-y-2">
-              <div className="text-indigo-500 text-5xl mb-4">✨</div> {/* Placeholder icon */}
-              <h3 className="text-2xl font-semibold text-gray-900 mb-4">
-                Intuitive Interface
-              </h3>
-              <p className="text-gray-700">
-                Designed for simplicity, Flake's interface allows you to
-                navigate and create with unparalleled ease.
-              </p>
-            </div>
-            {/* Feature 2 */}
-            <div className="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 transform hover:-translate-y-2">
-              <div className="text-indigo-500 text-5xl mb-4">🚀</div> {/* Placeholder icon */}
-              <h3 className="text-2xl font-semibold text-gray-900 mb-4">
-                Blazing Fast Performance
-              </h3>
-              <p className="text-gray-700">
-                Experience lightning-fast load times and smooth operations,
-                even with complex projects.
-              </p>
-            </div>
-            {/* Feature 3 */}
-            <div className="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 transform hover:-translate-y-2">
-              <div className="text-indigo-500 text-5xl mb-4">🔗</div> {/* Placeholder icon */}
-              <h3 className="text-2xl font-semibold text-gray-900 mb-4">
-                Seamless Integrations
-              </h3>
-              <p className="text-gray-700">
-                Connect with your favorite tools and services effortlessly,
-                expanding your workflow capabilities.
-              </p>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              {
+                icon: Brain,
+                title: "Intelligent Conversations",
+                description:
+                  "Advanced AI models that understand context and provide meaningful responses.",
+                gradient: "from-purple-500 to-pink-500",
+              },
+              {
+                icon: Zap,
+                title: "Lightning Fast",
+                description:
+                  "Optimized performance with instant responses and seamless user experience.",
+                gradient: "from-yellow-500 to-orange-500",
+              },
+              {
+                icon: Sparkles,
+                title: "Creative AI",
+                description:
+                  "Generate, create, and innovate with our suite of creative AI tools.",
+                gradient: "from-cyan-500 to-blue-500",
+              },
+            ].map((feature, index) => (
+              <div
+                key={index}
+                className="group relative bg-white/5 backdrop-blur-sm p-8 rounded-2xl border border-white/10 hover:border-white/20 transition-all duration-300 transform hover:-translate-y-2 hover:scale-105"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r opacity-0 group-hover:opacity-10 transition-opacity duration-300 rounded-2xl blur-xl"></div>
+                <div
+                  className={`w-16 h-16 bg-gradient-to-r ${feature.gradient} rounded-xl flex items-center justify-center mb-6 mx-auto`}
+                >
+                  <feature.icon className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-2xl font-semibold text-white mb-4 text-center">
+                  {feature.title}
+                </h3>
+                <p className="text-purple-200 text-center leading-relaxed">
+                  {feature.description}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Partners Section */}
+      {/*  Partners Section */}
       <section
         id="partners"
         ref={partnersRef}
-        className={`py-20 bg-white shadow-inner transform transition-all duration-1000 ease-out ${
-          partnersVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'
+        className={`py-20 bg-black/20 backdrop-blur-sm border-y border-white/10 transform transition-all duration-1000 ease-out ${
+          partnersVisible
+            ? "translate-y-0 opacity-100"
+            : "translate-y-20 opacity-0"
         }`}
       >
         <div className="container mx-auto px-6 text-center">
-          <h2 className="text-4xl font-bold text-indigo-700 mb-12">
-            Our Valued Partners
+          <h2 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent mb-12">
+            Powered By
           </h2>
-          <div className="relative h-32 overflow-hidden">
-            <div className="absolute inset-0 flex flex-row items-center animate-horizontal-scroll whitespace-nowrap">
-              {partners.map((partner, index) => (
-                <div key={index} className="flex flex-col items-center p-4 flex-shrink-0 w-48">
+
+          <div className="marquee">
+            <div className="marquee__content">
+              {[...partners, ...partners].map((partner, i) => (
+                <div key={i} className="partner-item">
                   <img
-                    src={partner.logo}
+                    src={partner.path}
                     alt={partner.name}
-                    className="h-20 object-contain"
-                    onError={(e) => { e.target.onerror = null; e.target.src="https://placehold.co/100x100/CCCCCC/000000?text=Logo"; }}
+                    width={50}
+                    height={50}
                   />
-                  <p className="mt-2 text-lg font-semibold text-gray-800">{partner.name}</p>
-                </div>
-              ))}
-              {/* Duplicate partners to create a seamless loop */}
-              {partners.map((partner, index) => (
-                <div key={`dup-${index}`} className="flex flex-col items-center p-4 flex-shrink-0 w-48">
-                  <img
-                    src={partner.logo}
-                    alt={partner.name}
-                    className="h-20 object-contain"
-                    onError={(e) => { e.target.onerror = null; e.target.src="https://placehold.co/100x100/CCCCCC/000000?text=Logo"; }}
-                  />
-                  <p className="mt-2 text-lg font-semibold text-gray-800">{partner.name}</p>
+
+                  <p className="text-sm font-medium text-purple-200 mt-2">
+                    {partner.name}
+                  </p>
                 </div>
               ))}
             </div>
@@ -360,52 +423,129 @@ const FlakeHomePage = () => {
         </div>
       </section>
 
-      {/* Call to Action Section */}
+      {/* Enhanced CTA Section */}
       <section
         id="contact"
         ref={ctaRef}
-        className={`py-20 bg-indigo-600 text-white text-center transform transition-all duration-1000 ease-out ${
-          ctaVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'
+        className={`py-20 text-center transform transition-all duration-1000 ease-out ${
+          ctaVisible ? "translate-y-0 opacity-100" : "translate-y-20 opacity-0"
         }`}
       >
-        <div className="container mx-auto px-6 max-w-3xl">
-          <h2 className="text-4xl font-bold mb-6">Ready to Build Something Amazing?</h2>
-          <p className="text-xl mb-10">
-            Join the Flake community today and transform your ideas into reality.
-          </p>
-          <button className="px-10 py-5 bg-white text-indigo-600 text-xl font-bold rounded-full shadow-xl hover:bg-gray-100 transition-all duration-300 ease-in-out transform hover:scale-105">
-            Get Started with Flake
-          </button>
+        <div className="container mx-auto px-6 max-w-4xl">
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-cyan-500/20 rounded-3xl blur-xl"></div>
+            <div className="relative bg-white/5 backdrop-blur-sm rounded-3xl p-12 border border-white/10">
+              <h2 className="text-4xl font-bold mb-6 bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
+                Ready to Experience the Future?
+              </h2>
+              <p className="text-xl mb-10 text-purple-200 max-w-2xl mx-auto">
+                Join thousands of creators who are already using Flake AI to
+                transform their ideas into reality.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <button className="group px-10 py-5 bg-gradient-to-r from-blue-600 to-blue-600 text-white text-xl font-bold rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2">
+                  <span>
+                    {" "}
+                    <Link href="/auth">Explore</Link>
+                  </span>
+                  <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-10 bg-gray-800 text-white text-center text-sm">
-        <div className="container mx-auto px-6">
-          <p>&copy; {new Date().getFullYear()} Flake. All rights reserved.</p>
-          <p className="mt-2">
-            Built with ❤️ by Gemini for an astounding web experience.
+      {/* Enhanced Footer */}
+      <footer className="py-12 bg-black/40 backdrop-blur-sm border-t border-white/10">
+        <div className="container mx-auto px-6 text-center">
+          <div className="flex items-center justify-center space-x-3 mb-4">
+            <FaSnowflake className="w-8 h-8 text-purple-400" />
+            <span className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
+              Flake AI
+            </span>
+          </div>
+          <p className="text-purple-200 mb-2">
+            &copy; {new Date().getFullYear()} Flake AI. All rights reserved.
+          </p>
+          <p className="text-purple-300">
+            Built with love for the future of AI interaction.
           </p>
         </div>
       </footer>
 
-      {/* Custom CSS for horizontal scrolling animation */}
+      {/*  CSS Animations */}
       <style jsx>{`
-        @keyframes horizontal-scroll {
-          0% {
-            transform: translateX(0%);
+        .marquee {
+          position: relative;
+          overflow: hidden;
+        }
+
+        .marquee__content {
+          display: grid;
+          grid-auto-flow: column;
+          grid-auto-columns: 15rem; /* match your .partner-item width */
+          gap: 2rem; /* optional spacing */
+          animation: marquee 15s linear infinite;
+        }
+
+        .partner-item {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+
+        /* keyframes */
+        @keyframes marquee {
+          from {
+            transform: translateX(0);
           }
-          100% {
-            transform: translateX(-50%); /* Scrolls left half the width to loop seamlessly */
+          to {
+            transform: translateX(-10%);
           }
         }
 
-        .animate-horizontal-scroll {
-          animation: horizontal-scroll 30s linear infinite; /* Adjust duration for speed */
+        @keyframes float {
+          0%,
+          100% {
+            transform: translateY(0px) rotate(0deg);
+          }
+          25% {
+            transform: translateY(-10px) rotate(5deg);
+          }
+          50% {
+            transform: translateY(-20px) rotate(0deg);
+          }
+          75% {
+            transform: translateY(-10px) rotate(-5deg);
+          }
+        }
+
+        @keyframes gradient {
+          0%,
+          100% {
+            background-position: 0% 50%;
+          }
+          50% {
+            background-position: 100% 50%;
+          }
+        }
+
+        .animate-scroll-left {
+          animation: scroll-left 30s linear infinite;
+        }
+
+        .animate-float {
+          animation: float 6s ease-in-out infinite;
+        }
+
+        .animate-gradient {
+          background-size: 200% 200%;
+          animation: gradient 3s ease infinite;
         }
       `}</style>
     </div>
   );
 };
 
-export default FlakeHomePage;
+export default IntegratedFlakeHomePage;

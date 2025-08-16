@@ -1,24 +1,22 @@
 "use client";
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import Sidebar from "../../components/SideBar";
+import { FaSnowflake } from "react-icons/fa";
+import { motion } from "framer-motion";
+
 import {
   Upload,
   Play,
   Pause,
-  RotateCw,
-  ZoomIn,
-  ZoomOut,
   Brain,
   Grid3X3,
-  RotateCcw,
   FileImage,
   Info,
   AlertCircle,
   Loader,
   XCircle,
 } from "lucide-react";
-import React, { useState, useRef, useEffect, useCallback } from "react";
-import Sidebar from "../../components/SideBar";
 
-// DICOM parsing utility functions
 const parseDicomFile = async (file) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -27,11 +25,9 @@ const parseDicomFile = async (file) => {
         const arrayBuffer = e.target.result;
         const dataView = new DataView(arrayBuffer);
 
-        // Check DICOM preamble and DICM prefix
         let offset = 128;
         let dicmPrefix = "";
         if (dataView.byteLength >= 132) {
-          // Ensure enough bytes for prefix
           dicmPrefix = String.fromCharCode(
             dataView.getUint8(offset),
             dataView.getUint8(offset + 1),
@@ -41,7 +37,6 @@ const parseDicomFile = async (file) => {
         }
 
         if (dicmPrefix !== "DICM") {
-          // Try without preamble (some DICOM files don't have it)
           offset = 0;
         } else {
           offset += 4;
@@ -54,8 +49,8 @@ const parseDicomFile = async (file) => {
           metadata: dicomData,
           pixelData: pixelData,
           isValidDicom: true,
-          filename: file.name, // Store filename here
-          filesize: file.size, // Store filesize here
+          filename: file.name,
+          filesize: file.size,
         });
       } catch (error) {
         reject(
@@ -265,7 +260,7 @@ const extractPixelData = (dataView, dicomData) => {
   };
 };
 
-const DicomMRIReader = () => {
+const MRIReader = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [currentSlice, setCurrentSlice] = useState(0);
   const [totalSlices, setTotalSlices] = useState(1);
@@ -275,14 +270,10 @@ const DicomMRIReader = () => {
   const [contrast, setContrast] = useState(100);
   const [brightness, setBrightness] = useState(100);
   const [showGrid, setShowGrid] = useState(false);
-  const [showRuler, setShowRuler] = useState(false);
-  const [tool, setTool] = useState("pan");
-  const [measurements, setMeasurements] = useState([]);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const [panPosition, setPanPosition] = useState({ x: 0, y: 0 });
-  const [dicomData, setDicomData] = useState(null); // Holds data for the *current* slice
-  const [dicomFiles, setDicomFiles] = useState([]); // Holds array of all parsed DICOM files
+  const [dicomData, setDicomData] = useState(null);
+  const [dicomFiles, setDicomFiles] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [loadingProgress, setLoadingProgress] = useState(0);
@@ -305,7 +296,6 @@ const DicomMRIReader = () => {
     }
   };
 
-  // Render DICOM image data to canvas
   const renderDicomImage = useCallback(
     (pixelData, metadata) => {
       const canvas = canvasRef.current;
@@ -382,7 +372,6 @@ const DicomMRIReader = () => {
     [contrast, brightness]
   );
 
-  // Generate mock MRI slice for fallback
   const generateMockMRISlice = useCallback(
     (sliceIndex) => {
       const canvas = canvasRef.current;
@@ -461,7 +450,7 @@ const DicomMRIReader = () => {
       // CSS filters on the canvas element (applied in JSX style) would be more appropriate for mock image if pixel manipulation isn't done.
     },
     [totalSlices]
-  ); // Removed currentSlice as it's passed as an argument
+  );
 
   useEffect(() => {
     if (dicomFiles.length > 0 && dicomFiles[currentSlice]) {
@@ -474,7 +463,6 @@ const DicomMRIReader = () => {
     }
   }, [currentSlice, renderDicomImage, generateMockMRISlice, dicomFiles]);
 
-  // Effect to apply CSS filters for zoom, rotation, pan directly to the canvas element
   useEffect(() => {
     const canvas = canvasRef.current;
     if (canvas) {
@@ -497,8 +485,8 @@ const DicomMRIReader = () => {
     setIsLoading(true);
     setError(null);
     setLoadingProgress(0);
-    setDicomFiles([]); // Clear previous files
-    setDicomData(null); // Clear current DICOM data
+    setDicomFiles([]);
+    setDicomData(null);
 
     try {
       const fileArray = Array.from(files);
@@ -603,7 +591,6 @@ const DicomMRIReader = () => {
     }
   };
 
-  // Function to handle resetting the DICOM viewer state
   const handleResetDicom = () => {
     clearInterval(playIntervalRef.current); // Stop any ongoing playback
     setIsPlaying(false);
@@ -616,49 +603,48 @@ const DicomMRIReader = () => {
     resetView(); // Reset all view transformations
   };
 
-  // Get current DICOM info for display
   const getCurrentDicomInfo = () => {
     if (!dicomData || !dicomData.metadata) {
       return {
-        patientName: "No DICOM loaded",
-        patientID: "-",
-        studyDate: "-",
-        modality: "-",
-        manufacturer: "-",
-        institutionName: "-",
-        sliceThickness: "-",
-        repetitionTime: "-",
-        echoTime: "-",
-        magneticFieldStrength: "-",
-        rows: "-",
-        columns: "-",
-        bitsAllocated: "-",
+        patientName: "",
+        patientID: "",
+        studyDate: "",
+        modality: "",
+        manufacturer: "",
+        institutionName: "",
+        sliceThickness: "",
+        repetitionTime: "",
+        echoTime: "",
+        magneticFieldStrength: "",
+        rows: "",
+        columns: "",
+        bitsAllocated: "",
       };
     }
 
     const meta = dicomData.metadata;
     return {
       patientName: meta.patientName || "Unknown Patient",
-      patientID: meta.patientID || "-",
-      studyDate: meta.studyDate ? formatDicomDate(meta.studyDate) : "-",
-      modality: meta.modality || "-",
-      manufacturer: meta.manufacturer || "-",
-      institutionName: meta.institutionName || "-",
+      patientID: meta.patientID || "....",
+      studyDate: meta.studyDate ? formatDicomDate(meta.studyDate) : "....",
+      modality: meta.modality || "....",
+      manufacturer: meta.manufacturer || "....",
+      institutionName: meta.institutionName || "....",
       sliceThickness: meta.sliceThickness
         ? `${parseFloat(meta.sliceThickness).toFixed(2)} mm`
-        : "-", // Format to 2 decimal places
+        : "....",
       repetitionTime: meta.repetitionTime
         ? `${parseFloat(meta.repetitionTime).toFixed(2)} ms`
-        : "-",
+        : "....",
       echoTime: meta.echoTime
         ? `${parseFloat(meta.echoTime).toFixed(2)} ms`
-        : "-",
+        : "....",
       magneticFieldStrength: meta.magneticFieldStrength
         ? `${parseFloat(meta.magneticFieldStrength).toFixed(1)} T`
-        : "-",
-      rows: meta.rows || "-",
-      columns: meta.columns || "-",
-      bitsAllocated: meta.bitsAllocated || "-",
+        : "....",
+      rows: meta.rows || "....",
+      columns: meta.columns || "....",
+      bitsAllocated: meta.bitsAllocated || "....",
     };
   };
 
@@ -738,23 +724,38 @@ const DicomMRIReader = () => {
 
         <div className="flex h-[calc(100vh-80px)]">
           {/* Left Sidebar - Tools */}
-          <div className="w-64 bg-slate-900/50 backdrop-blur-sm border-r border-blue-500/30 p-4 space-y-4">
+          <div className="w-40 bg-slate-900/50 backdrop-blur-sm border-r border-blue-500/30 p-4 space-y-4">
+            <div className="flex space-x-2">
+              <button
+                onClick={() => setShowGrid(!showGrid)}
+                className={`flex-1 p-2 rounded-lg border transition-all duration-200 ${
+                  showGrid
+                    ? "bg-blue-600/30 border-blue-400"
+                    : "bg-slate-800/50 border-slate-600"
+                }`}
+              >
+                <Grid3X3 className="w-4 h-4 mx-auto" />
+              </button>
+
+              <button
+                onClick={resetView}
+                className="flex-1 p-2 text-sm bg-slate-700 hover:bg-slate-600 rounded-lg border border-slate-600 transition-all duration-200"
+              >
+                Reset
+              </button>
+            </div>
             {/* Image Controls */}
             <div className="space-y-4">
-              <h2 className="text-lg font-semibold text-blue-300">Controls</h2>
-
               <div className="space-y-3">
+                <h2 className="flex items-center justify-center text-lg  font-semibold text-blue-300">
+                  Controls
+                </h2>
+
                 <div>
-                  <label className="block text-sm text-slate-300 mb-1">
+                  <label className="flex items-center justify-center text-sm text-slate-300 py-3">
                     Zoom: {zoom}%
                   </label>
                   <div className="flex space-x-2">
-                    <button
-                      onClick={handleZoomOut}
-                      className="p-1 bg-slate-700 rounded"
-                    >
-                      <ZoomOut className="w-4 h-4" />
-                    </button>
                     <input
                       type="range"
                       min="25"
@@ -763,17 +764,11 @@ const DicomMRIReader = () => {
                       onChange={(e) => setZoom(parseInt(e.target.value))}
                       className="custom-range-slider"
                     />
-                    <button
-                      onClick={handleZoomIn}
-                      className="p-1 bg-slate-700 rounded"
-                    >
-                      <ZoomIn className="w-4 h-4" />
-                    </button>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm text-slate-300 mb-1">
+                  <label className="flex items-center justify-center text-sm text-slate-300 py-3">
                     Contrast: {contrast}%
                   </label>
                   <input
@@ -787,7 +782,7 @@ const DicomMRIReader = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm text-slate-300 mb-1">
+                  <label className="flex items-center justify-center text-sm text-slate-300 py-3">
                     Brightness: {brightness}%
                   </label>
                   <input
@@ -801,18 +796,10 @@ const DicomMRIReader = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm text-slate-300 mb-1">
+                  <label className="flex items-center justify-center text-sm text-slate-300 py-3">
                     Rotation: {rotation}°
                   </label>
                   <div className="flex space-x-2">
-                    <button
-                      onClick={() =>
-                        setRotation((prev) => (prev - 90 + 360) % 360)
-                      }
-                      className="p-1 bg-slate-700 rounded"
-                    >
-                      <RotateCcw className="w-4 h-4" />
-                    </button>
                     <input
                       type="range"
                       min="0"
@@ -821,34 +808,8 @@ const DicomMRIReader = () => {
                       onChange={(e) => setRotation(parseInt(e.target.value))}
                       className="custom-range-slider"
                     />
-                    <button
-                      onClick={() => setRotation((prev) => (prev + 90) % 360)}
-                      className="p-1 bg-slate-700 rounded"
-                    >
-                      <RotateCw className="w-4 h-4" />
-                    </button>
                   </div>
                 </div>
-              </div>
-
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => setShowGrid(!showGrid)}
-                  className={`flex-1 p-2 rounded-lg border transition-all duration-200 ${
-                    showGrid
-                      ? "bg-blue-600/30 border-blue-400"
-                      : "bg-slate-800/50 border-slate-600"
-                  }`}
-                >
-                  <Grid3X3 className="w-4 h-4 mx-auto" />
-                </button>
-
-                <button
-                  onClick={resetView}
-                  className="flex-1 p-2 bg-slate-700 hover:bg-slate-600 rounded-lg border border-slate-600 transition-all duration-200"
-                >
-                  Reset
-                </button>
               </div>
             </div>
           </div>
@@ -856,7 +817,7 @@ const DicomMRIReader = () => {
           {/* Main Viewer */}
           <div className="flex-1 flex flex-col">
             {/* Viewer Controls */}
-            <div className="bg-slate-800/50 backdrop-blur-sm border-b border-blue-500/30 p-4">
+            <div className="bg-slate-800/50 backdrop-blur-sm border-b border-blue-500/30 p-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
                   {!dicomData ? (
@@ -879,8 +840,8 @@ const DicomMRIReader = () => {
                           </span>
                         </div>
                       ) : (
-                        <div className="flex items-center space-x-2">
-                          <Upload className="w-5 h-5 text-blue-400" />
+                        <div className="flex items-center">
+                          <Upload className="w-8 h-2 text-blue-400" />
                           <span className="text-sm">Upload</span>
                         </div>
                       )}
@@ -899,12 +860,6 @@ const DicomMRIReader = () => {
                       <span className="text-green-300">
                         {dicomData.filename || "DICOM Loaded"}
                       </span>
-                      {isLoading && (
-                        <span className="flex items-center space-x-1 text-blue-400">
-                          <Loader className="w-4 h-4 animate-spin" />
-                          <span>({loadingProgress.toFixed(0)}%)</span>
-                        </span>
-                      )}
                     </div>
                   )}
                 </div>
@@ -939,12 +894,7 @@ const DicomMRIReader = () => {
               </div>
 
               {/* Loading/Error Messages */}
-              {isLoading && (
-                <div className="mt-2 text-blue-300 text-sm flex items-center">
-                  <Loader className="w-4 h-4 animate-spin mr-2" />
-                  Loading... ({loadingProgress.toFixed(0)}%)
-                </div>
-              )}
+
               {error && (
                 <div className="mt-2 text-red-400 text-sm flex items-center">
                   <AlertCircle className="w-4 h-4 mr-2" />
@@ -953,115 +903,118 @@ const DicomMRIReader = () => {
               )}
 
               {/* Slice Navigator */}
-              <div className="mt-4">
-                <input
-                  type="range"
-                  min="0"
-                  max={totalSlices > 0 ? totalSlices - 1 : 0}
-                  value={currentSlice}
-                  onChange={(e) => handleSliceChange(e.target.value)}
-                  className="custom-range-slider"
-                  disabled={totalSlices <= 1} // Disable slider if only one slice
-                />
-              </div>
+              {dicomData && (
+                <div className="mt-4">
+                  <input
+                    type="range"
+                    min="0"
+                    max={totalSlices > 0 ? totalSlices - 1 : 0}
+                    value={currentSlice}
+                    onChange={(e) => handleSliceChange(e.target.value)}
+                    className="custom-range-slider"
+                    disabled={totalSlices <= 1} // Disable slider if only one slice
+                  />
+                </div>
+              )}
             </div>
 
             {/* Image Viewer */}
-            <div className="flex-1 relative bg-blue overflow-hidden flex items-center justify-center">
-              <div
-                className="relative flex items-center justify-center h-full w-full" // Use h-full w-full to fill parent div
-              >
-                <canvas
-                  ref={canvasRef}
-                  className="border border-blue-500/30 shadow-2xl cursor-crosshair max-w-full max-h-full" // Added max-width/height
-                  onMouseMove={handleCanvasMouseMove}
-                  // Apply transforms directly to the canvas for display
-                  style={{
-                    transform: `scale(${
-                      zoom / 100
-                    }) rotate(${rotation}deg) translate(${panPosition.x}px, ${
-                      panPosition.y
-                    }px)`,
-                    imageRendering: "pixelated", // Improves sharp pixel scaling
-                  }}
-                />
+            {dicomData != null ? (
+              <div className="flex-1 relative bg-blue overflow-hidden flex items-center justify-center">
+                <div
+                  className="relative flex items-center justify-center h-full w-full" // Use h-full w-full to fill parent div
+                >
+                  <canvas
+                    ref={canvasRef}
+                    className="border border-blue-500/30 shadow-2xl cursor-crosshair max-w-full max-h-full" // Added max-width/height
+                    onMouseMove={handleCanvasMouseMove}
+                    // Apply transforms directly to the canvas for display
+                    style={{
+                      transform: `scale(${
+                        zoom / 100
+                      }) rotate(${rotation}deg) translate(${panPosition.x}px, ${
+                        panPosition.y
+                      }px)`,
+                      imageRendering: "pixelated", // Improves sharp pixel scaling
+                    }}
+                  />
 
-                {/* Grid Overlay */}
-                {showGrid && (
-                  <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                    {/* Position the grid overlay relative to the canvas, and scale/rotate it */}
-                    <div
-                      className="relative"
-                      style={{
-                        width: canvasRef.current?.width || 512,
-                        height: canvasRef.current?.height || 512,
-                        transform: `scale(${
-                          zoom / 100
-                        }) rotate(${rotation}deg) translate(${
-                          panPosition.x
-                        }px, ${panPosition.y}px)`,
-                      }}
-                    >
-                      <div className="grid grid-cols-8 grid-rows-8 h-full w-full opacity-30">
-                        {Array.from({ length: 64 }).map((_, i) => (
-                          <div
-                            key={i}
-                            className="border border-blue-400/50"
-                          ></div>
-                        ))}
+                  {/* Grid Overlay */}
+                  {showGrid && (
+                    <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                      {/* Position the grid overlay relative to the canvas, and scale/rotate it */}
+                      <div
+                        className="relative"
+                        style={{
+                          width: canvasRef.current?.width || 512,
+                          height: canvasRef.current?.height || 512,
+                          transform: `scale(${
+                            zoom / 100
+                          }) rotate(${rotation}deg) translate(${
+                            panPosition.x
+                          }px, ${panPosition.y}px)`,
+                        }}
+                      >
+                        <div className="grid grid-cols-8 grid-rows-8 h-full w-full opacity-30">
+                          {Array.from({ length: 64 }).map((_, i) => (
+                            <div
+                              key={i}
+                              className="border border-blue-400/50"
+                            ></div>
+                          ))}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
 
-                {/* Crosshair */}
-                {tool === "crosshair" && (
-                  <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                    {/* Position crosshair relative to the transformed image */}
-                    <div
-                      className="relative"
-                      style={{
-                        width: canvasRef.current?.width || 512,
-                        height: canvasRef.current?.height || 512,
-                        transform: `scale(${
-                          zoom / 100
-                        }) rotate(${rotation}deg) translate(${
-                          panPosition.x
-                        }px, ${panPosition.y}px)`,
-                      }}
-                    >
-                      <div
-                        className="absolute w-full h-0.5 bg-red-400/70"
-                        style={{ top: `${mousePos.y}px` }}
-                      />
-                      <div
-                        className="absolute h-full w-0.5 bg-red-400/70"
-                        style={{ left: `${mousePos.x}px` }}
-                      />
+                {/* Status Bar */}
+                <div className="absolute bottom-4 left-4 bg-slate-900/80 backdrop-blur-sm rounded-lg p-2 border border-blue-500/30">
+                  <div className="text-xs space-y-1">
+                    <div>
+                      Mouse: ({mousePos.x}, {mousePos.y})
                     </div>
+                    <div>Zoom: {zoom}%</div>
                   </div>
-                )}
-              </div>
-
-              {/* Status Bar */}
-              <div className="absolute bottom-4 left-4 bg-slate-900/80 backdrop-blur-sm rounded-lg p-2 border border-blue-500/30">
-                <div className="text-xs space-y-1">
-                  <div>
-                    Mouse: ({mousePos.x}, {mousePos.y})
-                  </div>
-                  <div>Zoom: {zoom}%</div>
-                  <div>Tool: {tool}</div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div>
+                <div className="flex justify-center items-center py-10">
+                  <div className="absolute inset-0  rounded-full blur-xl opacity-50 animate-pulse"></div>
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{
+                      repeat: Infinity,
+                      duration: 8,
+                      ease: "linear",
+                    }}
+                    className="bg-gradient-to-r from-blue-500 to-cyan-500 p-6 rounded-full w-fit"
+                  >
+                    <FaSnowflake className="w-16 h-16 text-white" />
+                  </motion.div>
+                </div>
+                <div className="flex justify-center items-center py-5">
+                  
+                  <motion.h1
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="text-6xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent mb-6 animate-gradient"
+                  >
+                    Flake Laboratories
+                  </motion.h1>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Right Sidebar - DICOM Info */}
-          <div className="w-80 bg-slate-900/50 backdrop-blur-sm border-l border-blue-500/30 p-4 space-y-4 overflow-y-auto">
-            <h3 className="text-lg font-semibold text-blue-300 flex items-center">
+          <div className="w-50 bg-slate-900/50 backdrop-blur-sm border-l border-blue-500/30 p-4 space-y-4 overflow-y-auto">
+            <h4 className="text-base font-semibold text-blue-300 flex items-center">
               <Info className="w-5 h-5 mr-2" />
-              DICOM Information
-            </h3>
+              Meta-data
+            </h4>
 
             <div className="space-y-3">
               {Object.entries(getCurrentDicomInfo()).map(([key, value]) => {
@@ -1074,10 +1027,10 @@ const DicomMRIReader = () => {
                     key={key}
                     className="bg-slate-800/50 rounded-lg p-3 border border-slate-600"
                   >
-                    <div className="text-xs text-slate-400 uppercase tracking-wide">
+                    <div className="text-xs text-slate-400  uppercase tracking-wide">
                       {key.replace(/([A-Z])/g, " $1").trim()}
                     </div>
-                    <div className="text-sm text-white font-mono">{value}</div>
+                    <div className="text-sm text-blue-300">{value}</div>
                   </div>
                 );
               })}
@@ -1129,4 +1082,4 @@ const DicomMRIReader = () => {
   );
 };
 
-export default DicomMRIReader;
+export default MRIReader;
