@@ -1,12 +1,19 @@
 "use client";
 import Link from "next/link";
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import { motion } from "framer-motion";
-import { Sparkles, Brain, Zap, MessageCircle, ArrowRight } from "lucide-react";
-import { FaSnowflake, FaDocker, FaReact } from "react-icons/fa";
+import React, { useState, useEffect, useRef } from "react";
+import { motion, useAnimation, useInView } from "framer-motion";
 import {
-  SiHuggingface,
-} from "react-icons/si";
+  Sparkles,
+  Brain,
+  Zap,
+  MessageCircle,
+  ArrowRight,
+  Code,
+  Share2,
+  Cpu,
+} from "lucide-react";
+import { FaSnowflake, FaDocker, FaReact } from "react-icons/fa";
+import { SiHuggingface } from "react-icons/si";
 import { TbBrandSupabase } from "react-icons/tb";
 
 const scrollToSection = (id) => {
@@ -19,160 +26,94 @@ const scrollToSection = (id) => {
   }
 };
 
+const Section = ({ children, id, ...props }) => {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-100px 0px" });
+  const controls = useAnimation();
+
+  useEffect(() => {
+    if (isInView) {
+      controls.start("visible");
+    }
+  }, [isInView, controls]);
+
+  return (
+    <motion.section
+      id={id}
+      ref={ref}
+      animate={controls}
+      initial="hidden"
+      variants={{
+        hidden: { opacity: 0, y: 75 },
+        visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
+      }}
+      {...props}
+    >
+      {children}
+    </motion.section>
+  );
+};
+
+const icons = [Sparkles, Zap, Brain, MessageCircle, FaSnowflake];
+
 const IntegratedFlakeHomePage = () => {
-  const [scrollY, setScrollY] = useState(0);
   const [headerShrunk, setHeaderShrunk] = useState(false);
   const [isClient, setIsClient] = useState(false);
 
-  // Refs for sections
-  const aboutRef = useRef(null);
-  const featuresRef = useRef(null);
-  const partnersRef = useRef(null);
-  const ctaRef = useRef(null);
-
-  // State for section visibility
-  const [aboutVisible, setAboutVisible] = useState(false);
-  const [featuresVisible, setFeaturesVisible] = useState(false);
-  const [partnersVisible, setPartnersVisible] = useState(false);
-  const [ctaVisible, setCtaVisible] = useState(false);
-
   useEffect(() => {
     setIsClient(true);
-  }, []);
-
-  const handleScroll = useCallback(() => {
-    const currentScrollY = window.scrollY;
-    setScrollY(currentScrollY);
-    setHeaderShrunk(currentScrollY > 80);
-
-    const checkVisibility = (entries) => {
-      entries.forEach((entry) => {
-        if (entry.target === aboutRef.current) {
-          setAboutVisible(entry.isIntersecting);
-        } else if (entry.target === featuresRef.current) {
-          setFeaturesVisible(entry.isIntersecting);
-        } else if (entry.target === partnersRef.current) {
-          setPartnersVisible(entry.isIntersecting);
-        } else if (entry.target === ctaRef.current) {
-          setCtaVisible(entry.isIntersecting);
-        }
-      });
+    const handleScroll = () => {
+      setHeaderShrunk(window.scrollY > 80);
     };
 
-    const observer = new IntersectionObserver(checkVisibility, {
-      threshold: 0.2,
-    });
-
-    if (aboutRef.current) observer.observe(aboutRef.current);
-    if (featuresRef.current) observer.observe(featuresRef.current);
-    if (partnersRef.current) observer.observe(partnersRef.current);
-    if (ctaRef.current) observer.observe(ctaRef.current);
-
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
     window.addEventListener("scroll", handleScroll);
-    handleScroll();
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, [handleScroll]);
-
-  //  partners data
   const partners = [
-    {
-      name: "Github",
-      path: "partners/github.svg",
-    },
-    {
-      name: "React",
-      path: "partners/react.svg",
-    },
-    {
-      name: "Hugging Face",
-      path: "partners/huggingface.svg",
-    },
-    {
-      name: "Docker",
-      path: "partners/docker.svg",
-    },
-    {
-      name: "Vercel",
-      path: "partners/vercel.svg",
-    },
-
-    {
-      name: "Next.js",
-      path: "partners/nextjs.svg",
-    },
-    {
-      name: "NPM",
-      path: "partners/npm.svg",
-    },
-    {
-      name: "Llama",
-      path: "partners/ollama.svg",
-    },
+    { name: "Github", path: "partners/github.svg" },
+    { name: "React", path: "partners/react.svg" },
+    { name: "Hugging Face", path: "partners/huggingface.svg" },
+    { name: "Docker", path: "partners/docker.svg" },
+    { name: "Vercel", path: "partners/vercel.svg" },
+    { name: "Next.js", path: "partners/nextjs.svg" },
+    { name: "NPM", path: "partners/npm.svg" },
+    { name: "Llama", path: "partners/ollama.svg" },
   ];
 
   const techStack = [
-    { icon: FaDocker, text: "Docker", color: "from-blue-400 to-blue-600" },
-    {
-      icon: SiHuggingface,
-      text: "HuggingFace",
-      color: "from-yellow-400 to-orange-500",
-    },
-    {
-      icon: TbBrandSupabase,
-      text: "Supabase",
-      color: "from-green-400 to-emerald-600",
-    },
-    { icon: FaReact, text: "React", color: "from-cyan-400 to-blue-500" },
+    { icon: FaDocker, text: "Docker" },
+    { icon: SiHuggingface, text: "HuggingFace" },
+    { icon: TbBrandSupabase, text: "Supabase" },
+    { icon: FaReact, text: "React" },
   ];
 
   return (
-    <div className="font-inter bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 min-h-screen text-white overflow-hidden">
-      {/* Background Effects */}
+    <div className="font-inter bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 min-h-screen text-white overflow-x-hidden">
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl animate-pulse"></div>
-
-        {/* Enhanced Floating Elements */}
         {isClient &&
-          [...Array(30)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute animate-float"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                animationDelay: `${Math.random() * 5}s`,
-                animationDuration: `${3 + Math.random() * 4}s`,
-              }}
-            >
-              {i % 5 === 0 && (
-                <Sparkles className="w-3 h-3 text-purple-400 opacity-60" />
-              )}
-              {i % 5 === 1 && (
-                <Zap className="w-3 h-3 text-yellow-400 opacity-60" />
-              )}
-              {i % 5 === 2 && (
-                <Brain className="w-3 h-3 text-blue-400 opacity-60" />
-              )}
-              {i % 5 === 3 && (
-                <MessageCircle className="w-3 h-3 text-pink-400 opacity-60" />
-              )}
-              {i % 5 === 4 && (
-                <FaSnowflake className="w-3 h-3 text-cyan-400 opacity-60" />
-              )}
-            </div>
-          ))}
+          [...Array(30)].map((_, i) => {
+            const IconComponent = icons[i % 5];
+            return (
+              <div
+                key={i}
+                className="absolute animate-float"
+                style={{
+                  left: `${Math.random() * 100}%`,
+                  top: `${Math.random() * 100}%`,
+                  animationDelay: `${Math.random() * 5}s`,
+                  animationDuration: `${3 + Math.random() * 4}s`,
+                }}
+              >
+                <IconComponent className="w-3 h-3 text-purple-400 opacity-60" />
+              </div>
+            );
+          })}
       </div>
 
-      {/* Enhanced Sticky Header */}
       <header
         className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ease-in-out ${
           headerShrunk
@@ -191,15 +132,15 @@ const IntegratedFlakeHomePage = () => {
             </span>
           </div>
           <ul className="flex space-x-8">
-            {["Home", "About", "Features", "Partners", "Contact"].map(
+            {["Home", "About", "build", "Features", "Partners", "Enter"].map(
               (item) => (
                 <li key={item}>
                   <button
                     onClick={() =>
                       scrollToSection(
-                        item.toLowerCase() === "home"
+                        item.toLowerCase().replace(" ", "-") === "home"
                           ? "hero"
-                          : item.toLowerCase()
+                          : item.toLowerCase().replace(" ", "-")
                       )
                     }
                     className="text-gray-300 hover:text-white transition-all duration-200 relative group cursor-pointer"
@@ -214,22 +155,16 @@ const IntegratedFlakeHomePage = () => {
         </nav>
       </header>
 
-      {/* Enhanced Hero Section */}
       <section
         id="hero"
         className="relative h-screen flex items-center justify-center overflow-hidden"
       >
         <div className="relative z-10 text-center max-w-6xl mx-auto px-6">
-          {/* AI Logo Animation */}
           <div className="relative inline-block mb-8">
             <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full blur-xl opacity-50 animate-pulse"></div>
             <motion.div
               animate={{ rotate: 360 }}
-              transition={{
-                repeat: Infinity,
-                duration: 8,
-                ease: "linear",
-              }}
+              transition={{ repeat: Infinity, duration: 8, ease: "linear" }}
               className="bg-gradient-to-r from-blue-500 to-cyan-500 p-6 rounded-full w-fit"
             >
               <FaSnowflake className="w-16 h-16 text-white" />
@@ -241,7 +176,7 @@ const IntegratedFlakeHomePage = () => {
             transition={{ delay: 0.2 }}
             className="text-6xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent mb-6 animate-gradient"
           >
-            Flake ai{" "}
+            Flake AI
           </motion.h1>
 
           <motion.p
@@ -255,12 +190,11 @@ const IntegratedFlakeHomePage = () => {
             Salcidio.
           </motion.p>
 
-          {/* Tech Stack Pills */}
           <div className="flex flex-wrap justify-center gap-4 mb-12">
             {techStack.map((tech, index) => (
               <div
                 key={index}
-                className={`flex items-center space-x-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded border border-white/20 hover:scale-110 transition-all duration-300 cursor-pointer hover:bg-white/20`}
+                className="flex items-center space-x-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded border border-white/20 hover:scale-110 transition-all duration-300 cursor-pointer hover:bg-white/20"
               >
                 <tech.icon className="w-5 h-5 text-white" />
                 <span className="text-white font-medium">{tech.text}</span>
@@ -270,16 +204,7 @@ const IntegratedFlakeHomePage = () => {
         </div>
       </section>
 
-      {/* Enhanced About Section */}
-      <section
-        id="about"
-        ref={aboutRef}
-        className={`py-20 bg-black/20 backdrop-blur-sm border-y border-white/10 transform transition-all duration-1000 ease-out ${
-          aboutVisible
-            ? "translate-y-0 opacity-100"
-            : "translate-y-20 opacity-0"
-        }`}
-      >
+      <Section id="about" className="py-20 bg-black/20 backdrop-blur-sm border-y border-white/10">
         <div className="container mx-auto px-6 text-center max-w-4xl">
           <h2 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent mb-8">
             About Flake AI
@@ -287,7 +212,7 @@ const IntegratedFlakeHomePage = () => {
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div className="text-left">
               <p className="text-lg text-purple-200 leading-relaxed mb-6">
-                Flake AI is more than just a platform; it&apos;s a revolutionary
+                Flake AI is more than just a platform; it's a revolutionary
                 approach to artificial intelligence. We believe in empowering
                 creators with tools that are intuitive, powerful, and
                 beautifully designed.
@@ -313,18 +238,47 @@ const IntegratedFlakeHomePage = () => {
             </div>
           </div>
         </div>
-      </section>
+      </Section>
 
-      {/* Enhanced Features Section */}
-      <section
-        id="features"
-        ref={featuresRef}
-        className={`py-20 transform transition-all duration-1000 ease-out ${
-          featuresVisible
-            ? "translate-y-0 opacity-100"
-            : "translate-y-20 opacity-0"
-        }`}
-      >
+      <Section id="build" className="py-20">
+        <div className="container mx-auto px-6 text-center">
+          <h2 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent mb-12">
+            How It Works
+          </h2>
+          <div className="grid md:grid-cols-3 gap-8 items-start">
+            {[
+              {
+                icon: Cpu,
+                title: "Connect Your Models",
+                description:
+                  "Easily integrate your Hugging Face models into our secure, scalable infrastructure.",
+              },
+              {
+                icon: Code,
+                title: "Build Your Interface",
+                description:
+                  "Use our intuitive tools to create stunning user interfaces for your AI applications.",
+              },
+              {
+                icon: Share2,
+                title: "Deploy and Share",
+                description:
+                  "Deploy your creations with a single click and share them with the world.",
+              },
+            ].map((step, index) => (
+              <div key={index} className="flex flex-col items-center">
+                <div className="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center mb-6 border border-white/20">
+                  <step.icon className="w-10 h-10 text-cyan-400" />
+                </div>
+                <h3 className="text-2xl font-semibold mb-3">{step.title}</h3>
+                <p className="text-purple-200 max-w-xs">{step.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Section>
+
+      <Section id="features" className="py-20">
         <div className="container mx-auto px-6">
           <h2 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent text-center mb-12">
             AI-Powered Features
@@ -373,17 +327,11 @@ const IntegratedFlakeHomePage = () => {
             ))}
           </div>
         </div>
-      </section>
+      </Section>
 
-      {/*  Partners Section */}
-      <section
+      <Section
         id="partners"
-        ref={partnersRef}
-        className={`py-20 bg-black/20 backdrop-blur-sm border-y border-white/10 transform transition-all duration-1000 ease-out ${
-          partnersVisible
-            ? "translate-y-0 opacity-100"
-            : "translate-y-20 opacity-0"
-        }`}
+        className="py-20 bg-black/20 backdrop-blur-sm border-y border-white/10"
       >
         <div className="container mx-auto px-6 text-center">
           <h2 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent mb-12">
@@ -397,10 +345,8 @@ const IntegratedFlakeHomePage = () => {
                   <img
                     src={partner.path}
                     alt={partner.name}
-                    width={50}
-                    height={50}
+                    className="h-12 w-auto object-contain"
                   />
-
                   <p className="text-sm font-medium text-purple-200 mt-2">
                     {partner.name}
                   </p>
@@ -409,16 +355,9 @@ const IntegratedFlakeHomePage = () => {
             </div>
           </div>
         </div>
-      </section>
+      </Section>
 
-      {/* Enhanced CTA Section */}
-      <section
-        id="contact"
-        ref={ctaRef}
-        className={`py-20 text-center transform transition-all duration-1000 ease-out ${
-          ctaVisible ? "translate-y-0 opacity-100" : "translate-y-20 opacity-0"
-        }`}
-      >
+      <Section id="enter" className="py-20 text-center">
         <div className="container mx-auto px-6 max-w-4xl">
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-cyan-500/20 rounded-3xl blur-xl"></div>
@@ -431,20 +370,22 @@ const IntegratedFlakeHomePage = () => {
                 transform their ideas into reality.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <button className="group px-10 py-5 bg-gradient-to-r from-blue-600 to-blue-600 text-white text-xl font-bold rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2">
-                  <span>
-                    {" "}
-                    <Link href="/auth">Explore</Link>
-                  </span>
-                  <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
-                </button>
+                <Link href="/auth" passHref>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="group px-10 py-5 bg-gradient-to-r from-blue-600 to-cyan-500 text-white text-xl font-bold rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center justify-center space-x-2"
+                  >
+                    <span>Explore</span>
+                    <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                  </motion.button>
+                </Link>
               </div>
             </div>
           </div>
         </div>
-      </section>
+      </Section>
 
-      {/* Enhanced Footer */}
       <footer className="py-12 bg-black/40 backdrop-blur-sm border-t border-white/10">
         <div className="container mx-auto px-6 text-center">
           <div className="flex items-center justify-center space-x-3 mb-4">
@@ -462,34 +403,35 @@ const IntegratedFlakeHomePage = () => {
         </div>
       </footer>
 
-      {/*  CSS Animations */}
       <style jsx>{`
         .marquee {
           position: relative;
           overflow: hidden;
+          --gap: 2rem;
+          --duration: 40s;
         }
 
         .marquee__content {
-          display: grid;
-          grid-auto-flow: column;
-          grid-auto-columns: 15rem; /* match your .partner-item width */
-          gap: 2rem; /* optional spacing */
-          animation: marquee 30s linear infinite;
+          display: flex;
+          gap: var(--gap);
+          animation: marquee var(--duration) linear infinite;
         }
 
         .partner-item {
+          flex-shrink: 0;
           display: flex;
           flex-direction: column;
           align-items: center;
+          justify-content: center;
+          width: 15rem;
         }
 
-        /* keyframes */
         @keyframes marquee {
           from {
             transform: translateX(0);
           }
           to {
-            transform: translateX(-50%);
+            transform: translateX(calc(-50% - var(--gap) / 2));
           }
         }
 
@@ -508,6 +450,9 @@ const IntegratedFlakeHomePage = () => {
             transform: translateY(-10px) rotate(-5deg);
           }
         }
+        .animate-float {
+          animation: float 6s ease-in-out infinite;
+        }
 
         @keyframes gradient {
           0%,
@@ -518,15 +463,6 @@ const IntegratedFlakeHomePage = () => {
             background-position: 100% 50%;
           }
         }
-
-        .animate-scroll-left {
-          animation: scroll-left 30s linear infinite;
-        }
-
-        .animate-float {
-          animation: float 6s ease-in-out infinite;
-        }
-
         .animate-gradient {
           background-size: 200% 200%;
           animation: gradient 3s ease infinite;

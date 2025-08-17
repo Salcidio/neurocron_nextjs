@@ -3,6 +3,8 @@ import InputForm from "./input-form";
 import Results from "./results";
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { Sparkles, Brain, Zap, MessageCircle, ArrowRight } from "lucide-react";
+
 import {
   FaSnowflake,
   FaRobot,
@@ -39,7 +41,7 @@ export default function ParkinsonPredictor() {
       console.error("Error signing out:", error.message);
     }
   };
-// to be changed with real api call
+  // to be changed with real api call
   const handlePrediction = (data) => {
     setIsAnalyzing(true);
     setTimeout(() => {
@@ -50,51 +52,43 @@ export default function ParkinsonPredictor() {
 
   return (
     <div className="pl-10 min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 relative overflow-hidden">
-      {/* Header - now specific to chat page actions */}
-      <header className="relative z-20 w-full bg-black/50 backdrop-blur-sm p-2 flex items-center justify-end">
-        <br />
-        <br />
-      </header>
-
       {/* Sidebar */}
       <Sidebar onSignOut={handleSignOut} />
 
       {/* Background Visual Effects */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-blue-500/20 rounded-full blur-3xl animate-float" />
-        <div
-          className="absolute top-40 right-20 w-96 h-96 bg-pink-500/20 rounded-full blur-3xl animate-float"
-          style={{ animationDelay: "2s" }}
-        />
-        <div
-          className="absolute bottom-20 left-1/4 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl animate-float"
-          style={{ animationDelay: "4s" }}
-        />
-        <div
-          className="absolute bottom-40 right-1/3 w-80 h-80 bg-cyan-500/20 rounded-full blur-3xl animate-float"
-          style={{ animationDelay: "1s" }}
-        />
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl animate-pulse"></div>
 
-        <div
-          className="absolute inset-0 bg-grid-pattern opacity-10"
-          style={{
-            backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
-                            linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
-            backgroundSize: "50px 50px",
-          }}
-        />
-
-        {[...Array(20)].map((_, i) => (
+        {/* Enhanced Floating Elements */}
+        {[...Array(30)].map((_, i) => (
           <div
             key={i}
-            className="absolute w-1 h-1 bg-white/30 rounded-full animate-pulse"
+            className="absolute animate-float"
             style={{
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 4}s`,
-              animationDuration: `${2 + Math.random() * 3}s`,
+              animationDelay: `${Math.random() * 5}s`,
+              animationDuration: `${3 + Math.random() * 4}s`,
             }}
-          />
+          >
+            {i % 5 === 0 && (
+              <Sparkles className="w-3 h-3 text-purple-400 opacity-60" />
+            )}
+            {i % 5 === 1 && (
+              <Zap className="w-3 h-3 text-yellow-400 opacity-60" />
+            )}
+            {i % 5 === 2 && (
+              <Brain className="w-3 h-3 text-blue-400 opacity-60" />
+            )}
+            {i % 5 === 3 && (
+              <MessageCircle className="w-3 h-3 text-pink-400 opacity-60" />
+            )}
+            {i % 5 === 4 && (
+              <FaSnowflake className="w-3 h-3 text-cyan-400 opacity-60" />
+            )}
+          </div>
         ))}
       </div>
 
@@ -105,7 +99,7 @@ export default function ParkinsonPredictor() {
             className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl 
                           hover:shadow-blue-glow/20 transition-all duration-500 animate-float mb-8"
           >
-            <div className="flex justify-center items-center">
+            <div className="flex justify-center items-center py-5">
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ repeat: Infinity, duration: 8, ease: "linear" }}
@@ -114,15 +108,11 @@ export default function ParkinsonPredictor() {
                 <FaSnowflake className="w-16 h-16 text-white" />
               </motion.div>
             </div>
-            <br />
-            <br />
 
             <div className="flex items-center justify-center gap-4 mb-6">
-              <div className="h-1 w-24 bg-gradient-to-r from-blue-500 to-transparent rounded-full" />
-              <div className="text-lg font-semibold text-blue-300">
-                Parkinson modeling.
-              </div>
-              <div className="h-1 w-24 bg-gradient-to-l from-pink-500 to-transparent rounded-full" />
+              <div className="h-2 w-34 bg-gradient-to-r from-blue-500 to-transparent rounded-full" />
+              <div className="text-lg text-blue-300">Flake Laboratories.</div>
+              <div className="h-2 w-34 bg-gradient-to-l from-pink-500 to-transparent rounded-full" />
             </div>
           </div>
 

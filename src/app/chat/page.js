@@ -1,6 +1,12 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { supabase } from "../../lib/supabaseClient";
+import { useRouter } from "next/navigation";
+import { FaSnowflake } from "react-icons/fa";
+import { motion } from "framer-motion";
+import Sidebar from "../../components/SideBar";
+import ChatInput from "../../components/ChatInput";
 import {
   BookA,
   Bot,
@@ -10,12 +16,6 @@ import {
   Zap,
   MessageSquarePlus,
 } from "lucide-react";
-import { supabase } from "../../lib/supabaseClient";
-import { useRouter } from "next/navigation";
-import { FaSnowflake } from "react-icons/fa";
-import { motion } from "framer-motion";
-import Sidebar from "../../components/SideBar";
-import ChatInput from "../../components/ChatInput";
 
 export default function ChatPage() {
   const [user, setUser] = useState(null);
@@ -240,15 +240,17 @@ export default function ChatPage() {
       {/* Main content area */}
       <div className="flex-1 flex flex-col relative z-10">
         {/* Header - now specific to chat page actions */}
-        <header className="relative z-20 w-full bg-black/50 backdrop-blur-sm p-2 flex items-center justify-end">
-          <button
-            onClick={clearChat}
-            className="p-2 bg-blue-600 rounded-md text-white font-medium hover:shadow-md hover:shadow-blue-500/25 transform hover:scale-105 transition-all duration-200 border border-blue-400/50 cursor-pointer"
-            aria-label="Clear Chat"
-          >
-            <MessageSquarePlus size={20} />
-          </button>
-        </header>
+        {!showWelcome && (
+          <header className="relative z-20 w-full bg-black/50 backdrop-blur-sm p-2 flex items-center justify-end">
+            <button
+              onClick={clearChat}
+              className="p-2 bg-blue-600 rounded-md text-white font-medium hover:shadow-md hover:shadow-blue-500/25 transform hover:scale-105 transition-all duration-200 border border-blue-400/50 cursor-pointer"
+              aria-label="Clear Chat"
+            >
+              <MessageSquarePlus size={20} />
+            </button>
+          </header>
+        )}
 
         {/* Main chat content and input area */}
         <div className="flex-1 flex flex-col max-w-6xl mx-auto w-full">
@@ -341,7 +343,20 @@ export default function ChatPage() {
                       {message.type === "user" ? (
                         <User size={22} className="text-white" />
                       ) : (
-                        <FaSnowflake size={22} className="text-white" />
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{
+                            repeat: Infinity,
+                            duration: 8,
+                            ease: "linear",
+                          }}
+                          className="bg-gradient-to-r from-blue-500 to-cyan-500  rounded-full w-fit"
+                        >
+                          <FaSnowflake
+                            size={22}
+                            className="text-white animate-pulse"
+                          />
+                        </motion.div>
                       )}
                     </div>
 
