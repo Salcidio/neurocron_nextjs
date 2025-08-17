@@ -212,7 +212,7 @@ const IntegratedFlakeHomePage = () => {
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div className="text-left">
               <p className="text-lg text-purple-200 leading-relaxed mb-6">
-                Flake AI is more than just a platform; it's a revolutionary
+                Flake AI is more than just a platform; it&apos;s a revolutionary
                 approach to artificial intelligence. We believe in empowering
                 creators with tools that are intuitive, powerful, and
                 beautifully designed.
