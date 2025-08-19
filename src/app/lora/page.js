@@ -451,7 +451,7 @@ export default function ParkinsonsMRITool() {
             <div>
               <h3 className="font-medium text-blue-300 mb-2">AI Model</h3>
               <p className="text-gray-300">
-                Stable Diffusion with custom LoRA adapter trained on Parkinson's
+                Stable Diffusion with custom LoRA adapter trained on Parkinson&apos;s
                 MRI datasets
               </p>
             </div>
@@ -466,7 +466,7 @@ export default function ParkinsonsMRITool() {
               <h3 className="font-medium text-blue-300 mb-2">Disease Stages</h3>
               <p className="text-gray-300">
                 Visualizes progression from healthy brain to advanced
-                Parkinson's disease
+                Parkinson&apos;s disease
               </p>
             </div>
             <div>
