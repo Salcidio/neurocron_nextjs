@@ -3,8 +3,7 @@ import InputForm from "./input-form";
 import Results from "./results";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Sparkles, Brain, Zap, MessageCircle, ArrowRight } from "lucide-react";
-
+import { Sparkles, Brain, Zap, MessageCircle } from "lucide-react";
 import {
   FaSnowflake,
   FaRobot,
@@ -41,7 +40,7 @@ export default function ParkinsonPredictor() {
       console.error("Error signing out:", error.message);
     }
   };
-  // to be changed with real api call
+
   const handlePrediction = (data) => {
     setIsAnalyzing(true);
     setTimeout(() => {
