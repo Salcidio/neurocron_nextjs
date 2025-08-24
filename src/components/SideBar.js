@@ -89,7 +89,7 @@ export default function Sidebar({ onSignOut }) {
             IconFilled={StarFill}
             label="Flake"
             collapsed={collapsed}
-            href="/tinyflake"
+            href="/lora"
           />
         </nav>
       </div>

@@ -39,34 +39,33 @@ export default function ChatPage() {
     scrollToBottom();
   }, [messages]);
 
-  //  //Check authentication and initialize
-  // useEffect(() => {
-  //   let isMounted = true;
-  //   supabase.auth.getUser().then(({ data: { user } }) => {
-  //     if (!user) {
-  //       router.replace("/");
-  //     } else if (isMounted) {
-  //       setUser(user);
-  //       setLoading(false);
-  //     }
-  //   });
+   //auth section --snowFlake
+   useEffect(() => {
+     let isMounted = true;
+     supabase.auth.getUser().then(({ data: { user } }) => {
+       if (!user) {
+         router.replace("/");
+       } else if (isMounted) {
+         setUser(user);
+         setLoading(false);
+       }
+     });
 
-  //   const { data: authListener } = supabase.auth.onAuthStateChange(
-  //     async (_, session) => {
-  //       if (!session?.user) {
-  //         router.replace("/auth");
-  //       } else {
-  //         setUser(session.user);
-  //       }
-  //     }
-  //   );
-
-  //   return () => {
-  //     isMounted = false;
-  //     authListener.subscription.unsubscribe();
-  //   };
-  // }, [router, messages.length]); // messages.length is in the dependency array to prevent stale closure issues for messages
-
+     const { data: authListener } = supabase.auth.onAuthStateChange(
+       async (_, session) => {
+         if (!session?.user) {  //auth section --snowFlake
+           router.replace("/auth");
+         } else {
+           setUser(session.user);
+         }
+       }
+     )
+     return () => {
+       isMounted = false;
+       authListener.subscription.unsubscribe();
+     };
+   }, [router, messages.length]); // messages.length is in the dependency array to prevent stale closure issues for messages
+  //End auth section --snowFlake
   const MAX_HISTORY_TURNS = 4; // Define how many recent user/bot pairs to keep
   const handleSendMessage = async (inputValue, selectedMode) => {
     if (!inputValue.trim() || isLoading) return;

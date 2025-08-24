@@ -1,7 +1,8 @@
 "use client";
 import InputForm from "./input-form";
 import Results from "./results";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Sparkles, Brain, Zap, MessageCircle } from "lucide-react";
 import {
@@ -26,6 +27,36 @@ export default function ParkinsonPredictor() {
   const [prediction, setPrediction] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const router = useRouter();
+  const [messages, setMessages] = useState([]);
+  //auth section --snowFlake
+  useEffect(() => {
+    let isMounted = true;
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) {
+        router.replace("/");
+      } else if (isMounted) {
+        setUser(user);
+        setLoading(false);
+      }
+    });
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (_, session) => {
+        if (!session?.user) {
+          //auth section --snowFlake
+          router.replace("/auth");
+        } else {
+          setUser(session.user);
+        }
+      }
+    );
+    return () => {
+      isMounted = false;
+      authListener.subscription.unsubscribe();
+    };
+  }, [router, messages.length]); // messages.length is in the dependency array to prevent stale closure issues for messages
+  //End auth section --snowFlake
 
   const handleSignOut = async () => {
     setSigningOut(true);

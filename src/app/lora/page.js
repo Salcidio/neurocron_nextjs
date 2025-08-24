@@ -1,7 +1,11 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { supabase } from "../../lib/supabaseClient";
+import { useRouter } from "next/navigation";
 import Head from "next/head";
 import { FaSnowflake } from "react-icons/fa";
+import Sidebar from "../../components/SideBar";
+
 import {
   ChevronDown,
   Brain,
@@ -20,7 +24,51 @@ export default function ParkinsonsMRITool() {
   const [analysisResults, setAnalysisResults] = useState(null);
   const [customPrompt, setCustomPrompt] = useState("");
   const [animationPlaying, setAnimationPlaying] = useState(false);
+  const router = useRouter();
+  const [messages, setMessages] = useState([]);
 
+  //auth section --snowFlake
+  useEffect(() => {
+    let isMounted = true;
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) {
+        router.replace("/");
+      } else if (isMounted) {
+        setUser(user);
+        setLoading(false);
+      }
+    });
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (_, session) => {
+        if (!session?.user) {
+          //auth section --snowFlake
+          router.replace("/auth");
+        } else {
+          setUser(session.user);
+        }
+      }
+    );
+    return () => {
+      isMounted = false;
+      authListener.subscription.unsubscribe();
+    };
+  }, [router, messages.length]); // messages.length is in the dependency array to prevent stale closure issues for messages
+  //End auth section --snowFlake
+
+  const handleSignOut = async () => {
+    setSigningOut(true);
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      console.log("User signed out successfully");
+      router.push("/");
+      setSigningOut(false); //trying to exit to the page before the loading exiting end showing
+    } catch (error) {
+      setSigningOut(false);
+      console.error("Error signing out:", error.message);
+    }
+  };
   const diseaseStages = {
     healthy: {
       label: "Healthy Control",
@@ -160,6 +208,8 @@ export default function ParkinsonsMRITool() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
+      {/* Sidebar */}
+      <Sidebar onSignOut={handleSignOut} />
       <Head>
         <title>Flake laboratories</title>
         <meta
@@ -169,7 +219,7 @@ export default function ParkinsonsMRITool() {
       </Head>
 
       {/* Header */}
-      <div className="flex items-center justify-center bg-black/20 backdrop-blur-sm border-b border-blue-500/20">
+      <div className="flex  items-center justify-center bg-black/20 backdrop-blur-sm border-b border-blue-500/20">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
@@ -451,8 +501,8 @@ export default function ParkinsonsMRITool() {
             <div>
               <h3 className="font-medium text-blue-300 mb-2">AI Model</h3>
               <p className="text-gray-300">
-                Stable Diffusion with custom LoRA adapter trained on Parkinson&apos;s
-                MRI datasets
+                Stable Diffusion with custom LoRA adapter trained on
+                Parkinson&apos;s MRI datasets
               </p>
             </div>
             <div>

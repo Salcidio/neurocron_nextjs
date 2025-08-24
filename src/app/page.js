@@ -45,7 +45,11 @@ const Section = ({ children, id, ...props }) => {
       initial="hidden"
       variants={{
         hidden: { opacity: 0, y: 75 },
-        visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
+        visible: {
+          opacity: 1,
+          y: 0,
+          transition: { duration: 0.6, ease: "easeOut" },
+        },
       }}
       {...props}
     >
@@ -82,10 +86,18 @@ const IntegratedFlakeHomePage = () => {
   ];
 
   const techStack = [
-    { icon: FaDocker, text: "Docker" },
-    { icon: SiHuggingface, text: "HuggingFace" },
-    { icon: TbBrandSupabase, text: "Supabase" },
-    { icon: FaReact, text: "React" },
+    { icon: FaDocker, text: "Docker", link: "http://www.docker.com" },
+    {
+      icon: SiHuggingface,
+      text: "HuggingFace",
+      link: "http://www.huggingfac.com",
+    },
+    {
+      icon: TbBrandSupabase,
+      text: "Supabase",
+      link: "http://www.supabase.com",
+    },
+    { icon: FaReact, text: "React", link: "http://www.react.com" },
   ];
 
   return (
@@ -192,19 +204,21 @@ const IntegratedFlakeHomePage = () => {
 
           <div className="flex flex-wrap justify-center gap-4 mb-12">
             {techStack.map((tech, index) => (
-              <div
-                key={index}
-                className="flex items-center space-x-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded border border-white/20 hover:scale-110 transition-all duration-300 cursor-pointer hover:bg-white/20"
-              >
-                <tech.icon className="w-5 h-5 text-white" />
-                <span className="text-white font-medium">{tech.text}</span>
-              </div>
+              <Link key={index} href={tech.link}>
+                <div className="flex items-center space-x-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded border border-white/20 hover:scale-110 transition-all duration-300 cursor-pointer hover:bg-white/20">
+                  <tech.icon className="w-5 h-5 text-white" />
+                  <span className="text-white font-medium">{tech.text}</span>
+                </div>
+              </Link>
             ))}
           </div>
         </div>
       </section>
 
-      <Section id="about" className="py-20 bg-black/20 backdrop-blur-sm border-y border-white/10">
+      <Section
+        id="about"
+        className="py-20 bg-black/20 backdrop-blur-sm border-y border-white/10"
+      >
         <div className="container mx-auto px-6 text-center max-w-4xl">
           <h2 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent mb-8">
             About Flake AI
@@ -369,12 +383,12 @@ const IntegratedFlakeHomePage = () => {
                 Join thousands of creators who are already using Flake AI to
                 transform their ideas into reality.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <div className="flex flex-col sm:flex-row gap-4 justify-center ">
                 <Link href="/auth" passHref>
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="group px-10 py-5 bg-gradient-to-r from-blue-600 to-cyan-500 text-white text-xl font-bold rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center justify-center space-x-2"
+                    className="hover:scale-110 transition-all duration-300 cursor-pointer group px-10 py-5 bg-gradient-to-r from-blue-600 to-cyan-500 text-white text-xl font-bold rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center justify-center space-x-2"
                   >
                     <span>Explore</span>
                     <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
