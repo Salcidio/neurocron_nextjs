@@ -27,34 +27,44 @@ export default function ParkinsonsMRITool() {
   const router = useRouter();
   const [messages, setMessages] = useState([]);
 
-  //auth section --snowFlake
+  // New state variables for API URL, guidance scale, and inference steps
+  const [apiUrl, setApiUrl] = useState(
+    "https://amaro2a-flakeai.hf.space/generate-image"
+  );
+  const [guidanceScale, setGuidanceScale] = useState(7.5);
+  const [numSteps, setNumSteps] = useState(1);
+  const [user, setUser] = useState(null);
+  const [signingOut, setSigningOut] = useState(false);
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    let isMounted = true;
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) {
-        router.replace("/");
-      } else if (isMounted) {
-        setUser(user);
-        setLoading(false);
+    const checkAuth = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) {
+        router.push("/"); // not logged in → redirect to root
+      } else {
+        setUser(session.user);
+      }
+      setLoading(false);
+    };
+
+    checkAuth();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        router.push("/");
+      } else {
+        setUser(session.user);
       }
     });
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (_, session) => {
-        if (!session?.user) {
-          //auth section --snowFlake
-          router.replace("/auth");
-        } else {
-          setUser(session.user);
-        }
-      }
-    );
-    return () => {
-      isMounted = false;
-      authListener.subscription.unsubscribe();
-    };
-  }, [router, messages.length]); // messages.length is in the dependency array to prevent stale closure issues for messages
-  //End auth section --snowFlake
+    return () => subscription.unsubscribe();
+  }, [router]);
 
   const handleSignOut = async () => {
     setSigningOut(true);
@@ -63,12 +73,38 @@ export default function ParkinsonsMRITool() {
       if (error) throw error;
       console.log("User signed out successfully");
       router.push("/");
-      setSigningOut(false); //trying to exit to the page before the loading exiting end showing
     } catch (error) {
-      setSigningOut(false);
       console.error("Error signing out:", error.message);
+    } finally {
+      setSigningOut(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-900  to-blue-900 flex items-center justify-center">
+        <div className="text-white text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p>Loading</p>
+        </div>
+      </div>
+    );
+  }
+
+    // Loading screen for signing out
+  if (signingOut) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-1000 via-blue to-blue-800 flex items-center justify-center">
+        <div className="text-white text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p>Exiting...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Guard: If no user, nothing should render (router already redirected)
+  if (!user) return null;
   const diseaseStages = {
     healthy: {
       label: "Healthy Control",
@@ -99,9 +135,6 @@ export default function ParkinsonsMRITool() {
     dti: "DTI [ Diffusion Tensor ]",
     fmri: "fMRI [ Functional ]",
   };
-
-  // API endpoint for the FastAPI backend hosted on Hugging Face Spaces
-  const API_URL = "https://amaro2a-flakeai.hf.space/generate-image";
 
   // Formula for calculating temporal progression metrics
   const calculateProgressionMetrics = (stage) => {
@@ -144,7 +177,7 @@ export default function ParkinsonsMRITool() {
 
     // Make API call to FastAPI endpoint
     try {
-      const response = await fetch(API_URL, {
+      const response = await fetch(apiUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -152,8 +185,8 @@ export default function ParkinsonsMRITool() {
         },
         body: JSON.stringify({
           prompt,
-          num_steps: 1,
-          guidance_scale: 7.5,
+          num_steps: numSteps,
+          guidance_scale: guidanceScale,
         }),
       });
 
@@ -249,6 +282,18 @@ export default function ParkinsonsMRITool() {
               Generation Controls
             </h2>
 
+            {/* API URL Input */}
+            <div className="space-y-4 mb-6">
+              <label className="text-blue-300 font-medium">API URL</label>
+              <input
+                type="text"
+                value={apiUrl}
+                onChange={(e) => setApiUrl(e.target.value)}
+                placeholder="Enter API URL"
+                className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:border-blue-400"
+              />
+            </div>
+
             {/* Disease Stage Selection */}
             <div className="space-y-4 mb-6">
               <label className="text-blue-300 font-medium">Disease Stage</label>
@@ -303,6 +348,38 @@ export default function ParkinsonsMRITool() {
                 className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:border-blue-400 resize-none"
                 rows={3}
               />
+            </div>
+
+            {/* Guidance Scale and Inference Steps */}
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="text-blue-300 font-medium">
+                  Guidance Scale: {guidanceScale}
+                </label>
+                <input
+                  type="range"
+                  min="1"
+                  max="20"
+                  step="0.5"
+                  value={guidanceScale}
+                  onChange={(e) => setGuidanceScale(parseFloat(e.target.value))}
+                  className="w-full"
+                />
+              </div>
+              <div>
+                <label className="text-blue-300 font-medium">
+                  Inference Steps: {numSteps}
+                </label>
+                <input
+                  type="range"
+                  min="1"
+                  max="50"
+                  step="1"
+                  value={numSteps}
+                  onChange={(e) => setNumSteps(parseInt(e.target.value))}
+                  className="w-full"
+                />
+              </div>
             </div>
 
             {/* Action Buttons */}

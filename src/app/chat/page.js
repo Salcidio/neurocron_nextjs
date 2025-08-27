@@ -28,6 +28,73 @@ export default function ChatPage() {
   const [signingOut, setSigningOut] = useState(false);
   const router = useRouter();
 
+  // auth section --snowflake
+  useEffect(() => {
+    const checkAuth = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) {
+        router.push("/"); // not logged in → redirect to root
+      } else {
+        setUser(session.user);
+      }
+      setLoading(false);
+    };
+
+    checkAuth();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        router.push("/");
+      } else {
+        setUser(session.user);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [router]);
+
+  const handleSignOut = async () => {
+    setSigningOut(true);
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      console.log("User signed out successfully");
+      router.push("/");
+    } catch (error) {
+      console.error("Error signing out:", error.message);
+    } finally {
+      setSigningOut(false);
+    }
+  };
+  // Loading screen
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-900  to-blue-900 flex items-center justify-center">
+        <div className="text-white text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p>Loading</p>
+        </div>
+      </div>
+    );
+  }
+  // Loading screen for signing out
+  if (signingOut) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-1000 via-blue to-blue-800 flex items-center justify-center">
+        <div className="text-white text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p>Exiting...</p>
+        </div>
+      </div>
+    );
+  }
+//end auth section --snowflake
+
   // Backend API URL
   const API_BASE_URL = "https://neurocron-render.onrender.com";
 
@@ -39,33 +106,6 @@ export default function ChatPage() {
     scrollToBottom();
   }, [messages]);
 
-   //auth section --snowFlake
-   useEffect(() => {
-     let isMounted = true;
-     supabase.auth.getUser().then(({ data: { user } }) => {
-       if (!user) {
-         router.replace("/");
-       } else if (isMounted) {
-         setUser(user);
-         setLoading(false);
-       }
-     });
-
-     const { data: authListener } = supabase.auth.onAuthStateChange(
-       async (_, session) => {
-         if (!session?.user) {  //auth section --snowFlake
-           router.replace("/auth");
-         } else {
-           setUser(session.user);
-         }
-       }
-     )
-     return () => {
-       isMounted = false;
-       authListener.subscription.unsubscribe();
-     };
-   }, [router, messages.length]); // messages.length is in the dependency array to prevent stale closure issues for messages
-  //End auth section --snowFlake
   const MAX_HISTORY_TURNS = 4; // Define how many recent user/bot pairs to keep
   const handleSendMessage = async (inputValue, selectedMode) => {
     if (!inputValue.trim() || isLoading) return;
@@ -171,43 +211,6 @@ export default function ChatPage() {
     setMessages([]); // Clears all messages
     setShowWelcome(true); // Shows the welcome screen again
   };
-
-  const handleSignOut = async () => {
-    setSigningOut(true);
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      console.log("User signed out successfully");
-      router.push("/");
-      setSigningOut(false); //trying to exit to the page before the loading exiting end showing
-    } catch (error) {
-      setSigningOut(false);
-      console.error("Error signing out:", error.message);
-    }
-  };
-
-  // Loading screen
-  if (!loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900  to-blue-900 flex items-center justify-center">
-        <div className="text-white text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-          <p>Loading...</p>
-        </div>
-      </div>
-    );
-  }
-  // Loading screen for signing out
-  if (signingOut) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-1000 via-blue to-blue-800 flex items-center justify-center">
-        <div className="text-white text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-          <p>Exiting...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-1000 via-blue-1000 to-blue-1000  text-white relative overflow-hidden flex">

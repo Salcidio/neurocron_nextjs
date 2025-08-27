@@ -6,37 +6,38 @@ import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/lib/supabaseClient";
 import { FaSnowflake } from "react-icons/fa";
 import { motion } from "framer-motion";
-
 import Link from "next/link";
+
 export default function AuthComponent() {
   const [session, setSession] = useState(null);
-  const [redirectTo, setRedirectTo] = useState(null);
   const router = useRouter();
 
-  useEffect(() => {
-    setRedirectTo(window.location.origin + "/chat");
+  // Initialize redirectTo safely on first render
+  const redirectTo =
+    typeof window !== "undefined" ? window.location.origin + "/lora" : null;
 
+  useEffect(() => {
+    // Check for active session
     const getSession = async () => {
       const {
         data: { session },
       } = await supabase.auth.getSession();
       setSession(session);
-      if (session) {
-        router.push("/chat");
-      }
     };
     getSession();
 
+    // Listen for auth state changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (session) {
-        router.push("/chat");
+        router.push("/lora");
       }
     });
 
-    return () => subscription.unsubscribe();
+    // Cleanup subscription
+    return () => subscription?.unsubscribe();
   }, [router]);
 
   return (
@@ -56,7 +57,7 @@ export default function AuthComponent() {
               <FaSnowflake className="w-10 h-10 text-white" />
             </motion.div>
           </div>
-          <br/>
+          <br />
           Flake AI
         </h2>
       </Link>

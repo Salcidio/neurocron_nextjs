@@ -1,137 +1,239 @@
 "use client";
-import { useState, useEffect } from 'react';
-import Head from 'next/head';
-import { ChevronDown, Brain, Zap, Download, Upload, Settings, Play, Pause } from 'lucide-react';
+import { useState, useEffect, useRef } from "react";
+import { supabase } from "../../lib/supabaseClient";
+import { useRouter } from "next/navigation";
+import Head from "next/head";
+import { FaSnowflake } from "react-icons/fa";
+import Sidebar from "../../components/SideBar";
+
+import {
+  ChevronDown,
+  Brain,
+  Zap,
+  Download,
+  Settings,
+  Play,
+  Pause,
+} from "lucide-react";
 
 export default function ParkinsonsMRITool() {
-  const [selectedStage, setSelectedStage] = useState('early');
-  const [selectedView, setSelectedView] = useState('axial');
+  const [selectedStage, setSelectedStage] = useState("early");
+  const [selectedView, setSelectedView] = useState("axial");
   const [generatedImage, setGeneratedImage] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [comparisonMode, setComparisonMode] = useState(false);
   const [analysisResults, setAnalysisResults] = useState(null);
-  const [customPrompt, setCustomPrompt] = useState('');
+  const [customPrompt, setCustomPrompt] = useState("");
   const [animationPlaying, setAnimationPlaying] = useState(false);
+  const router = useRouter();
+  const [messages, setMessages] = useState([]);
 
-  const diseaseStages = {
-    'healthy': {
-      label: 'Healthy Control',
-      description: 'Normal brain structure with intact substantia nigra',
-      color: '#22c55e'
-    },
-    'early': {
-      label: 'Early Stage PD',
-      description: 'Mild dopaminergic neuron loss, subtle structural changes',
-      color: '#f59e0b'
-    },
-    'moderate': {
-      label: 'Moderate Stage PD',
-      description: 'Moderate substantia nigra degeneration, visible atrophy',
-      color: '#f97316'
-    },
-    'advanced': {
-      label: 'Advanced Stage PD',
-      description: 'Severe neurodegeneration, significant structural changes',
-      color: '#dc2626'
+  //auth section --snowFlake
+  useEffect(() => {
+    let isMounted = true;
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) {
+        router.replace("/");
+      } else if (isMounted) {
+        setUser(user);
+        setLoading(false);
+      }
+    });
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (_, session) => {
+        if (!session?.user) {
+          //auth section --snowFlake
+          router.replace("/auth");
+        } else {
+          setUser(session.user);
+        }
+      }
+    );
+    return () => {
+      isMounted = false;
+      authListener.subscription.unsubscribe();
+    };
+  }, [router, messages.length]); // messages.length is in the dependency array to prevent stale closure issues for messages
+  //End auth section --snowFlake
+
+  const handleSignOut = async () => {
+    setSigningOut(true);
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      console.log("User signed out successfully");
+      router.push("/");
+      setSigningOut(false); //trying to exit to the page before the loading exiting end showing
+    } catch (error) {
+      setSigningOut(false);
+      console.error("Error signing out:", error.message);
     }
+  };
+  const diseaseStages = {
+    healthy: {
+      label: "Healthy Control",
+      description: "Normal brain structure with intact substantia nigra",
+      color: "#22c55e",
+    },
+    early: {
+      label: "Early Stage PD",
+      description: "Mild dopaminergic neuron loss, subtle structural changes",
+      color: "#f59e0b",
+    },
+    moderate: {
+      label: "Moderate Stage PD",
+      description: "Moderate substantia nigra degeneration, visible atrophy",
+      color: "#f97316",
+    },
+    advanced: {
+      label: "Advanced Stage PD",
+      description: "Severe neurodegeneration, significant structural changes",
+      color: "#dc2626",
+    },
   };
 
   const viewTypes = {
-    'axial': 'Axial (Horizontal)',
-    'sagittal': 'Sagittal (Side)',
-    'coronal': 'Coronal (Frontal)',
-    'dti': 'DTI (Diffusion Tensor)',
-    'fmri': 'fMRI (Functional)'
+    axial: "Axial [ Horizontal ]",
+    sagittal: "Sagittal [ Side ]",
+    coronal: "Coronal [ Frontal ]",
+    dti: "DTI [ Diffusion Tensor ]",
+    fmri: "fMRI [ Functional ]",
   };
 
-  // Simulate AI model inference
+  // API endpoint for the FastAPI backend hosted on Hugging Face Spaces
+  const API_URL = "https://amaro2a-flakeai.hf.space/generate-image";
+
+  // Formula for calculating temporal progression metrics
+  const calculateProgressionMetrics = (stage) => {
+    const baseMetrics = {
+      substantiaNigraIntensity: 95, // Percentage (healthy baseline)
+      brainVolume: 1400, // cm³ (healthy baseline)
+      asymmetryIndex: 2, // Low asymmetry in healthy brain
+      confidenceScore: 95, // High confidence for healthy brain
+    };
+
+    // Progression factors for each stage (simulating disease progression)
+    const progressionFactors = {
+      healthy: { sn: 1, bv: 1, ai: 1, cs: 1 },
+      early: { sn: 0.85, bv: 0.95, ai: 1.5, cs: 0.9 },
+      moderate: { sn: 0.65, bv: 0.85, ai: 2.5, cs: 0.85 },
+      advanced: { sn: 0.45, bv: 0.75, ai: 4, cs: 0.8 },
+    };
+
+    const factor = progressionFactors[stage];
+    return {
+      substantiaNigraIntensity:
+        baseMetrics.substantiaNigraIntensity * factor.sn +
+        (Math.random() * 5 - 2.5), // ±2.5% noise
+      brainVolume:
+        baseMetrics.brainVolume * factor.bv + (Math.random() * 20 - 10), // ±10 cm³ noise
+      asymmetryIndex:
+        baseMetrics.asymmetryIndex * factor.ai + (Math.random() * 0.5 - 0.25), // ±0.25 noise
+      confidenceScore:
+        baseMetrics.confidenceScore * factor.cs + (Math.random() * 5 - 2.5), // ±2.5% noise
+    };
+  };
+
+  // Function to generate MRI image by calling the FastAPI backend
   const generateMRIImage = async () => {
     setIsGenerating(true);
-    
-    const prompt = customPrompt || 
+
+    const prompt =
+      customPrompt ||
       `${selectedStage} parkinson disease brain MRI ${selectedView} view, medical imaging, high resolution, clinical quality`;
-    
-    // Simulate API call to Stable Diffusion with LoRA
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    
-    // Mock generated image (in real app, this would be from your SD API)
-    const mockImageUrl = `data:image/svg+xml,${encodeURIComponent(`
-      <svg width="400" height="400" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <radialGradient id="brain" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" style="stop-color:#e5e7eb;stop-opacity:1" />
-            <stop offset="70%" style="stop-color:#9ca3af;stop-opacity:1" />
-            <stop offset="100%" style="stop-color:#374151;stop-opacity:1" />
-          </radialGradient>
-          <radialGradient id="substantia" cx="40%" cy="60%" r="15%">
-            <stop offset="0%" style="stop-color:${diseaseStages[selectedStage].color};stop-opacity:0.8" />
-            <stop offset="100%" style="stop-color:${diseaseStages[selectedStage].color};stop-opacity:0.3" />
-          </radialGradient>
-        </defs>
-        <rect width="400" height="400" fill="#1f2937"/>
-        <text x="10" y="20" fill="#9ca3af" font-size="12">Generated MRI - ${diseaseStages[selectedStage].label}</text>
-        <ellipse cx="200" cy="200" rx="150" ry="130" fill="url(#brain)"/>
-        <ellipse cx="160" cy="240" rx="25" ry="20" fill="url(#substantia)"/>
-        <ellipse cx="240" cy="240" rx="25" ry="20" fill="url(#substantia)"/>
-        <circle cx="180" cy="180" r="5" fill="#60a5fa" opacity="0.7"/>
-        <circle cx="220" cy="180" r="5" fill="#60a5fa" opacity="0.7"/>
-        <text x="10" y="390" fill="#6b7280" font-size="10">View: ${viewTypes[selectedView]}</text>
-        <text x="300" y="390" fill="#6b7280" font-size="10">AI Generated</text>
-      </svg>
-    `)}`;
-    
-    setGeneratedImage(mockImageUrl);
-    
-    // Generate mock analysis
-    const mockAnalysis = {
-      substantiaNigraIntensity: Math.random() * 100,
-      brainVolume: 1200 + Math.random() * 200,
-      asymmetryIndex: Math.random() * 10,
-      confidenceScore: 85 + Math.random() * 14
-    };
-    
-    setAnalysisResults(mockAnalysis);
-    setIsGenerating(false);
+
+    // Make API call to FastAPI endpoint
+    try {
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_HF_API_KEY}`,
+        },
+        body: JSON.stringify({
+          prompt,
+          num_steps: 1,
+          guidance_scale: 7.5,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status} ${response.statusText}`);
+      }
+
+      // Get the image as a blob and create a URL for it
+      const imageBlob = await response.blob();
+      const imageUrl = URL.createObjectURL(imageBlob);
+      setGeneratedImage(imageUrl);
+
+      // Calculate analysis metrics based on the selected stage
+      const analysis = calculateProgressionMetrics(selectedStage);
+      setAnalysisResults(analysis);
+    } catch (error) {
+      console.error("Error generating MRI image:", error);
+      setGeneratedImage(null);
+      setAnalysisResults(null);
+      alert("Failed to generate MRI image. Please try again.");
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
+  // Function to animate disease progression
   const startAnimation = () => {
     setAnimationPlaying(true);
-    const stages = ['healthy', 'early', 'moderate', 'advanced'];
+    const stages = ["healthy", "early", "moderate", "advanced"];
     let currentIndex = 0;
-    
-    const interval = setInterval(() => {
+
+    const interval = setInterval(async () => {
       setSelectedStage(stages[currentIndex]);
-      generateMRIImage();
+      await generateMRIImage();
       currentIndex = (currentIndex + 1) % stages.length;
-    }, 2000);
-    
+    }, 5000); // Increased interval to account for API call latency
+
     setTimeout(() => {
       clearInterval(interval);
       setAnimationPlaying(false);
-    }, 8000);
+    }, 20000); // 4 stages * 5 seconds each
   };
+
+  // Cleanup image URLs to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (generatedImage) {
+        URL.revokeObjectURL(generatedImage);
+      }
+    };
+  }, [generatedImage]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
+      {/* Sidebar */}
+      <Sidebar onSignOut={handleSignOut} />
       <Head>
         <title>Flake laboratories</title>
-        <meta name="description" content="AI-powered MRI visualization for Parkinson's disease research and education" />
+        <meta
+          name="description"
+          content="AI-powered MRI visualization for Parkinson's disease research and education"
+        />
       </Head>
 
       {/* Header */}
-      <div className="bg-black/20 backdrop-blur-sm border-b border-blue-500/20">
+      <div className="flex  items-center justify-center bg-black/20 backdrop-blur-sm border-b border-blue-500/20">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <Brain className="w-8 h-8 text-blue-400" />
               <div>
-                <h1 className="text-2xl font-bold text-white">Flake AI</h1>
-                <p className="text-blue-300 text-sm">Parkinson's MRI Visualization Suite</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="bg-green-500/20 px-3 py-1 rounded-full">
-                <span className="text-green-300 text-sm">LoRA Model Active</span>
+                <div className="flex items-center justify-center ">
+                  <FaSnowflake className="w-8 h-8 text-white relative z-10" />
+                </div>
+
+                <h1 className="flex items-center justify-center text-2xl font-bold text-white">
+                  Flake AI
+                </h1>
+                <p className="text-blue-300 text-sm">
+                  Parkinson&apos;s Disease Visualization Tool
+                </p>
               </div>
             </div>
           </div>
@@ -140,14 +242,13 @@ export default function ParkinsonsMRITool() {
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
           {/* Control Panel */}
           <div className="bg-black/30 backdrop-blur-sm rounded-2xl border border-blue-500/20 p-6">
             <h2 className="text-xl font-bold text-white mb-6 flex items-center">
               <Settings className="w-5 h-5 mr-2" />
               Generation Controls
             </h2>
-            
+
             {/* Disease Stage Selection */}
             <div className="space-y-4 mb-6">
               <label className="text-blue-300 font-medium">Disease Stage</label>
@@ -158,12 +259,12 @@ export default function ParkinsonsMRITool() {
                     onClick={() => setSelectedStage(key)}
                     className={`p-3 rounded-lg border transition-all ${
                       selectedStage === key
-                        ? 'border-blue-400 bg-blue-500/20 text-white'
-                        : 'border-gray-600 bg-gray-800/50 text-gray-300 hover:bg-gray-700/50'
+                        ? "border-blue-400 bg-blue-500/20 text-white"
+                        : "border-gray-600 bg-gray-800/50 text-gray-300 hover:bg-gray-700/50"
                     }`}
                   >
                     <div className="text-sm font-medium">{stage.label}</div>
-                    <div 
+                    <div
                       className="w-full h-1 rounded mt-2"
                       style={{ backgroundColor: stage.color }}
                     />
@@ -174,21 +275,27 @@ export default function ParkinsonsMRITool() {
 
             {/* View Type Selection */}
             <div className="space-y-4 mb-6">
-              <label className="text-blue-300 font-medium">MRI View</label>
+              <label className="text-blue-300 font-medium py-5 jsutify-center align-center">
+                Anatomical descriptors
+              </label>
               <select
                 value={selectedView}
                 onChange={(e) => setSelectedView(e.target.value)}
                 className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:border-blue-400"
               >
                 {Object.entries(viewTypes).map(([key, label]) => (
-                  <option key={key} value={key}>{label}</option>
+                  <option key={key} value={key}>
+                    {label}
+                  </option>
                 ))}
               </select>
             </div>
 
             {/* Custom Prompt */}
             <div className="space-y-4 mb-6">
-              <label className="text-blue-300 font-medium">Custom Prompt (Optional)</label>
+              <label className="text-blue-300 font-medium">
+                Custom Prompt (Optional)
+              </label>
               <textarea
                 value={customPrompt}
                 onChange={(e) => setCustomPrompt(e.target.value)}
@@ -217,7 +324,7 @@ export default function ParkinsonsMRITool() {
                   </>
                 )}
               </button>
-              
+
               <button
                 onClick={startAnimation}
                 disabled={animationPlaying}
@@ -243,24 +350,28 @@ export default function ParkinsonsMRITool() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-white">Generated MRI</h2>
               {generatedImage && (
-                <button className="text-blue-400 hover:text-blue-300 transition-colors">
-                  <Download className="w-5 h-5" />
-                </button>
+                <a href={generatedImage} download="mri-image.png">
+                  <button className="text-blue-400 hover:text-blue-300 transition-colors">
+                    <Download className="w-5 h-5" />
+                  </button>
+                </a>
               )}
             </div>
-            
+
             <div className="aspect-square bg-gray-900 rounded-lg border border-gray-700 flex items-center justify-center overflow-hidden">
               {generatedImage ? (
-                <img 
-                  src={generatedImage} 
-                  alt="Generated MRI" 
+                <img
+                  src={generatedImage}
+                  alt="Generated MRI"
                   className="w-full h-full object-cover"
                 />
               ) : (
                 <div className="text-center text-gray-400">
                   <Brain className="w-16 h-16 mx-auto mb-4 opacity-50" />
                   <p>Generated MRI will appear here</p>
-                  <p className="text-sm mt-2">Configure settings and click Generate</p>
+                  <p className="text-sm mt-2">
+                    Configure settings and click Generate
+                  </p>
                 </div>
               )}
             </div>
@@ -269,13 +380,19 @@ export default function ParkinsonsMRITool() {
             {generatedImage && (
               <div className="mt-4 p-4 bg-gray-800/50 rounded-lg">
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-medium text-white">{diseaseStages[selectedStage].label}</h3>
-                  <div 
+                  <h3 className="font-medium text-white">
+                    {diseaseStages[selectedStage].label}
+                  </h3>
+                  <div
                     className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: diseaseStages[selectedStage].color }}
+                    style={{
+                      backgroundColor: diseaseStages[selectedStage].color,
+                    }}
                   />
                 </div>
-                <p className="text-gray-300 text-sm">{diseaseStages[selectedStage].description}</p>
+                <p className="text-gray-300 text-sm">
+                  {diseaseStages[selectedStage].description}
+                </p>
               </div>
             )}
           </div>
@@ -283,59 +400,82 @@ export default function ParkinsonsMRITool() {
           {/* Analysis Results */}
           <div className="bg-black/30 backdrop-blur-sm rounded-2xl border border-blue-500/20 p-6">
             <h2 className="text-xl font-bold text-white mb-6">AI Analysis</h2>
-            
+
             {analysisResults ? (
               <div className="space-y-6">
                 <div className="space-y-4">
                   <div>
                     <div className="flex justify-between text-sm mb-1">
-                      <span className="text-blue-300">Substantia Nigra Intensity</span>
-                      <span className="text-white">{analysisResults.substantiaNigraIntensity.toFixed(1)}%</span>
+                      <span className="text-blue-300">
+                        Substantia Nigra Intensity
+                      </span>
+                      <span className="text-white">
+                        {analysisResults.substantiaNigraIntensity.toFixed(1)}%
+                      </span>
                     </div>
                     <div className="w-full bg-gray-700 rounded-full h-2">
-                      <div 
+                      <div
                         className="bg-gradient-to-r from-green-500 to-red-500 h-2 rounded-full transition-all"
-                        style={{ width: `${analysisResults.substantiaNigraIntensity}%` }}
+                        style={{
+                          width: `${analysisResults.substantiaNigraIntensity}%`,
+                        }}
                       />
                     </div>
                   </div>
-                  
+
                   <div>
                     <div className="flex justify-between text-sm mb-1">
                       <span className="text-blue-300">Brain Volume</span>
-                      <span className="text-white">{analysisResults.brainVolume.toFixed(0)} cm³</span>
+                      <span className="text-white">
+                        {analysisResults.brainVolume.toFixed(0)} cm³
+                      </span>
                     </div>
                     <div className="w-full bg-gray-700 rounded-full h-2">
-                      <div 
+                      <div
                         className="bg-blue-500 h-2 rounded-full transition-all"
-                        style={{ width: `${(analysisResults.brainVolume - 1200) / 200 * 100}%` }}
+                        style={{
+                          width: `${
+                            ((analysisResults.brainVolume - 1200) / 200) * 100
+                          }%`,
+                        }}
                       />
                     </div>
                   </div>
-                  
+
                   <div>
                     <div className="flex justify-between text-sm mb-1">
                       <span className="text-blue-300">Asymmetry Index</span>
-                      <span className="text-white">{analysisResults.asymmetryIndex.toFixed(2)}</span>
+                      <span className="text-white">
+                        {analysisResults.asymmetryIndex.toFixed(2)}
+                      </span>
                     </div>
                     <div className="w-full bg-gray-700 rounded-full h-2">
-                      <div 
+                      <div
                         className="bg-yellow-500 h-2 rounded-full transition-all"
-                        style={{ width: `${analysisResults.asymmetryIndex * 10}%` }}
+                        style={{
+                          width: `${analysisResults.asymmetryIndex * 10}%`,
+                        }}
                       />
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="border-t border-gray-700 pt-4">
                   <div className="flex items-center justify-between">
                     <span className="text-blue-300">Confidence Score</span>
                     <div className="flex items-center space-x-2">
-                      <span className="text-white font-bold">{analysisResults.confidenceScore.toFixed(1)}%</span>
-                      <div className={`w-2 h-2 rounded-full ${
-                        analysisResults.confidenceScore > 90 ? 'bg-green-500' :
-                        analysisResults.confidenceScore > 75 ? 'bg-yellow-500' : 'bg-red-500'
-                      }`} />
+                      <span className="text-white font-bold">
+                        {analysisResults.confidenceScore.toFixed(1)}%
+                      </span>
+                      <div
+                        className={`w-2 h-2 rounded-full ${
+                          analysisResults.confidenceScore > 90
+                            ? "bg-green-500"
+                            : analysisResults.confidenceScore > 75
+                            ? "bg-yellow-500"
+                            : "bg-red-500"
+                        }`}
+                      />
                     </div>
                   </div>
                 </div>
@@ -346,7 +486,9 @@ export default function ParkinsonsMRITool() {
                   <ChevronDown className="w-8 h-8" />
                 </div>
                 <p>Analysis results will appear here</p>
-                <p className="text-sm mt-2">Generate an MRI to start analysis</p>
+                <p className="text-sm mt-2">
+                  Generate an MRI to start analysis
+                </p>
               </div>
             )}
           </div>
@@ -358,19 +500,31 @@ export default function ParkinsonsMRITool() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-sm">
             <div>
               <h3 className="font-medium text-blue-300 mb-2">AI Model</h3>
-              <p className="text-gray-300">Stable Diffusion with custom LoRA adapter trained on Parkinson's MRI datasets</p>
+              <p className="text-gray-300">
+                Stable Diffusion with custom LoRA adapter trained on
+                Parkinson&apos;s MRI datasets
+              </p>
             </div>
             <div>
               <h3 className="font-medium text-blue-300 mb-2">Applications</h3>
-              <p className="text-gray-300">Medical education, research visualization, and synthetic data generation</p>
+              <p className="text-gray-300">
+                Medical education, research visualization, and synthetic data
+                generation
+              </p>
             </div>
             <div>
               <h3 className="font-medium text-blue-300 mb-2">Disease Stages</h3>
-              <p className="text-gray-300">Visualizes progression from healthy brain to advanced Parkinson's disease</p>
+              <p className="text-gray-300">
+                Visualizes progression from healthy brain to advanced
+                Parkinson&apos;s disease
+              </p>
             </div>
             <div>
               <h3 className="font-medium text-blue-300 mb-2">Disclaimer</h3>
-              <p className="text-gray-300">For research and educational purposes only. Not for clinical diagnosis.</p>
+              <p className="text-gray-300">
+                For research and educational purposes only. Not for clinical
+                diagnosis.
+              </p>
             </div>
           </div>
         </div>
@@ -378,4 +532,3 @@ export default function ParkinsonsMRITool() {
     </div>
   );
 }
-
