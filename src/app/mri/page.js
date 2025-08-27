@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import Sidebar from "../../components/SideBar";
+import { supabase } from "../../lib/supabaseClient";
 import { FaSnowflake } from "react-icons/fa";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
