@@ -24,6 +24,7 @@ import { supabase } from "../../lib/supabaseClient";
 import Sidebar from "../../components/SideBar";
 
 export default function ParkinsonPredictor() {
+  const [user, setUser] = useState(null);
   const [prediction, setPrediction] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [signingOut, setSigningOut] = useState(false);

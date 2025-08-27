@@ -267,6 +267,7 @@ const extractPixelData = (dataView, dicomData) => {
 };
 
 const MRIReader = () => {
+  const [user, setUser] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [currentSlice, setCurrentSlice] = useState(0);
   const [totalSlices, setTotalSlices] = useState(1);
