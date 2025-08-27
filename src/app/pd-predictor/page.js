@@ -29,6 +29,7 @@ export default function ParkinsonPredictor() {
   const [signingOut, setSigningOut] = useState(false);
   const router = useRouter();
   const [messages, setMessages] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   // auth section --snowflake
   useEffect(() => {
@@ -73,7 +74,16 @@ export default function ParkinsonPredictor() {
       setSigningOut(false);
     }
   };
-  // Loading screen
+
+  const handlePrediction = (data) => {
+    setIsAnalyzing(true);
+    setTimeout(() => {
+      setPrediction(data);
+      setIsAnalyzing(false);
+    }, 2000);
+  };
+
+    // Loading screen
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-900  to-blue-900 flex items-center justify-center">
@@ -96,14 +106,6 @@ export default function ParkinsonPredictor() {
     );
   }
   //end auth section --snowflake
-
-  const handlePrediction = (data) => {
-    setIsAnalyzing(true);
-    setTimeout(() => {
-      setPrediction(data);
-      setIsAnalyzing(false);
-    }, 2000);
-  };
 
   return (
     <div className="pl-10 min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 relative overflow-hidden">

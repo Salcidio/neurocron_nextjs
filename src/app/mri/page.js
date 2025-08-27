@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import Sidebar from "../../components/SideBar";
 import { FaSnowflake } from "react-icons/fa";
 import { motion } from "framer-motion";
-
+import { useRouter } from "next/navigation";
 import {
   Upload,
   Play,
@@ -272,6 +272,7 @@ const MRIReader = () => {
   const [totalSlices, setTotalSlices] = useState(1);
   const [isPlaying, setIsPlaying] = useState(false);
   const [zoom, setZoom] = useState(100);
+  const [loading, setLoading] = useState(true);
   const [rotation, setRotation] = useState(0);
   const [contrast, setContrast] = useState(100);
   const [brightness, setBrightness] = useState(100);
@@ -282,6 +283,8 @@ const MRIReader = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [loadingProgress, setLoadingProgress] = useState(0);
+  const router = useRouter();
+  
 
   // Added state for new controls
   const [activeTool, setActiveTool] = useState("pan");
@@ -345,29 +348,6 @@ const MRIReader = () => {
       setSigningOut(false);
     }
   };
-  // Loading screen
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900  to-blue-900 flex items-center justify-center">
-        <div className="text-white text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-          <p>Loading</p>
-        </div>
-      </div>
-    );
-  }
-  // Loading screen for signing out
-  if (signingOut) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-1000 via-blue to-blue-800 flex items-center justify-center">
-        <div className="text-white text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-          <p>Exiting...</p>
-        </div>
-      </div>
-    );
-  }
-  //end auth section --snowflake
 
   const renderDicomImage = useCallback(
     (pixelData, metadata) => {
@@ -824,6 +804,31 @@ const MRIReader = () => {
       setWindowWidth(parseFloat(metadata.windowWidth));
     }
   };
+
+    // Loading screen
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-900  to-blue-900 flex items-center justify-center">
+        <div className="text-white text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p>Loading</p>
+        </div>
+      </div>
+    );
+  }
+  // Loading screen for signing out
+  if (signingOut) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-1000 via-blue to-blue-800 flex items-center justify-center">
+        <div className="text-white text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p>Exiting...</p>
+        </div>
+      </div>
+    );
+  }
+  //end auth section --snowflake
+
 
   return (
     <div className="pl-15 min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white">

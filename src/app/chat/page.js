@@ -71,28 +71,7 @@ export default function ChatPage() {
       setSigningOut(false);
     }
   };
-  // Loading screen
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900  to-blue-900 flex items-center justify-center">
-        <div className="text-white text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-          <p>Loading</p>
-        </div>
-      </div>
-    );
-  }
-  // Loading screen for signing out
-  if (signingOut) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-1000 via-blue to-blue-800 flex items-center justify-center">
-        <div className="text-white text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-          <p>Exiting...</p>
-        </div>
-      </div>
-    );
-  }
+
 //end auth section --snowflake
 
   // Backend API URL
@@ -211,6 +190,29 @@ export default function ChatPage() {
     setMessages([]); // Clears all messages
     setShowWelcome(true); // Shows the welcome screen again
   };
+
+    // Loading screen
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-900  to-blue-900 flex items-center justify-center">
+        <div className="text-white text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p>Loading</p>
+        </div>
+      </div>
+    );
+  }
+  // Loading screen for signing out
+  if (signingOut) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-1000 via-blue to-blue-800 flex items-center justify-center">
+        <div className="text-white text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p>Exiting...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-1000 via-blue-1000 to-blue-1000  text-white relative overflow-hidden flex">

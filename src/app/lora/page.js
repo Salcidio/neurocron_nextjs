@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Head from "next/head";
 import { FaSnowflake } from "react-icons/fa";
 import Sidebar from "../../components/SideBar";
-
 import {
   ChevronDown,
   Brain,
@@ -24,6 +23,7 @@ export default function ParkinsonsMRITool() {
   const [analysisResults, setAnalysisResults] = useState(null);
   const [customPrompt, setCustomPrompt] = useState("");
   const [animationPlaying, setAnimationPlaying] = useState(false);
+
   const router = useRouter();
   const [messages, setMessages] = useState([]);
 
@@ -80,31 +80,8 @@ export default function ParkinsonsMRITool() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900  to-blue-900 flex items-center justify-center">
-        <div className="text-white text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-          <p>Loading</p>
-        </div>
-      </div>
-    );
-  }
 
-    // Loading screen for signing out
-  if (signingOut) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-1000 via-blue to-blue-800 flex items-center justify-center">
-        <div className="text-white text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-          <p>Exiting...</p>
-        </div>
-      </div>
-    );
-  }
 
-  // Guard: If no user, nothing should render (router already redirected)
-  if (!user) return null;
   const diseaseStages = {
     healthy: {
       label: "Healthy Control",
@@ -239,6 +216,28 @@ export default function ParkinsonsMRITool() {
     };
   }, [generatedImage]);
 
+    if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-900  to-blue-900 flex items-center justify-center">
+        <div className="text-white text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p>Loading</p>
+        </div>
+      </div>
+    );
+  }
+
+    // Loading screen for signing out
+  if (signingOut) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-1000 via-blue to-blue-800 flex items-center justify-center">
+        <div className="text-white text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p>Exiting...</p>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
       {/* Sidebar */}
