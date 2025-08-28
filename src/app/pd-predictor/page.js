@@ -27,10 +27,13 @@ export default function ParkinsonPredictor() {
   const [user, setUser] = useState(null);
   const [prediction, setPrediction] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [error, setError] = useState(null);
   const [signingOut, setSigningOut] = useState(false);
   const router = useRouter();
-  const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Reset form callback for InputForm
+  const [resetForm, setResetForm] = useState(() => () => {});
 
   // auth section --snowflake
   useEffect(() => {
@@ -71,6 +74,7 @@ export default function ParkinsonPredictor() {
       router.push("/");
     } catch (error) {
       console.error("Error signing out:", error.message);
+      setError("Failed to sign out. Please try again.");
     } finally {
       setSigningOut(false);
     }
@@ -78,16 +82,29 @@ export default function ParkinsonPredictor() {
 
   const handlePrediction = (data) => {
     setIsAnalyzing(true);
+    setError(null);
     setTimeout(() => {
-      setPrediction(data);
-      setIsAnalyzing(false);
+      try {
+        // Handle both /predict and /predict/files responses
+        const predictionData =
+          data.source === "files" ? data.predictions[0] : data;
+        if (!predictionData.predicted_biomarkers) {
+          throw new Error("Invalid prediction data received.");
+        }
+        setPrediction(predictionData);
+      } catch (err) {
+        console.error("Error processing prediction:", err);
+        setError("Failed to process prediction. Please try again.");
+      } finally {
+        setIsAnalyzing(false);
+      }
     }, 2000);
   };
 
-    // Loading screen
+  // Loading screen
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900  to-blue-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-900 to-blue-900 flex items-center justify-center">
         <div className="text-white text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
           <p>Loading</p>
@@ -106,7 +123,6 @@ export default function ParkinsonPredictor() {
       </div>
     );
   }
-  //end auth section --snowflake
 
   return (
     <div className="pl-10 min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 relative overflow-hidden">
@@ -152,6 +168,13 @@ export default function ParkinsonPredictor() {
 
       {/* Main Content */}
       <div className="relative z-10 container mx-auto px-4 py-8">
+        {/* Error Message */}
+        {error && (
+          <div className="mb-8 p-4 bg-red-500/20 text-white rounded-xl border border-red-500/40">
+            {error}
+          </div>
+        )}
+
         <div className="text-center mb-12">
           <div
             className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl 
@@ -256,7 +279,10 @@ export default function ParkinsonPredictor() {
                   </div>
                 </h3>
               </div>
-              <InputForm onSubmit={handlePrediction} />
+              <InputForm
+                onSubmit={handlePrediction}
+                onReset={(resetFn) => setResetForm(() => resetFn)}
+              />
             </div>
           )}
 
@@ -319,6 +345,7 @@ export default function ParkinsonPredictor() {
                   onClick={() => {
                     setPrediction(null);
                     setIsAnalyzing(false);
+                    resetForm(); // Reset InputForm state
                   }}
                   className="group px-8 py-4 bg-white/10 backdrop-blur-xl text-white font-semibold rounded-2xl 
                              border border-white/20 hover:bg-white/20 hover:scale-105 transition-all duration-300 

@@ -1,9 +1,9 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FaUser, FaUpload, FaCloudUploadAlt, FaFileAlt, FaChartBar, FaBrain, FaBed, FaSmile } from 'react-icons/fa';
 import { submitPatientData } from './api';
 
-export default function InputForm({ onSubmit }) {
+export default function InputForm({ onSubmit, onReset }) {
   const [formData, setFormData] = useState({
     ESS_TOTAL: '',
     ESS1: '',
@@ -18,42 +18,80 @@ export default function InputForm({ onSubmit }) {
     GDSSATIS: '',
     GDSHAPPY: ''
   });
-  const [file, setFile] = useState(null);
+  const [file, setFile] = useState([null, null, null, null]);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [activeSection, setActiveSection] = useState('sleep');
+
+  // Provide reset function to parent
+  useEffect(() => {
+    onReset(() => {
+      setFormData({
+        ESS_TOTAL: '',
+        ESS1: '',
+        ESS2: '',
+        GDSENRGY: '',
+        MCATOT: '',
+        MCAALTTM: '',
+        MCACUBE: '',
+        MCASER7: '',
+        MCAABSTR: '',
+        GDS_TOTAL: '',
+        GDSSATIS: '',
+        GDSHAPPY: ''
+      });
+      setFile([null, null, null, null]);
+      setError(null);
+      setActiveSection('sleep');
+    });
+  }, [onReset]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
+  const handleFileChange = (index) => (e) => {
+    const newFiles = [...file];
+    newFiles[index] = e.target.files[0];
+    setFile(newFiles);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
     try {
       let data;
-  if (file && Array.isArray(file)) {
-  const formDataFile = new FormData();
-  file.forEach((f, idx) => formDataFile.append("files", f));
-  data = await submitPatientData(formDataFile, true);
-}else {
+      if (activeSection === 'upload' && file.every(f => f !== null)) {
+        // File upload mode
+        const formDataFile = new FormData();
+        const fileLabels = ['ESS', 'MoCA', 'GDS', 'DaTSCAN'];
+        file.forEach((f, idx) => {
+          if (f) formDataFile.append('files', f, `${fileLabels[idx]}.csv`);
+        });
+        data = await submitPatientData(formDataFile, true);
+      } else {
+        // JSON form data mode
         const featureData = Object.fromEntries(
-          Object.entries(formData).map(([k, v]) => [k, parseFloat(v)])
+          Object.entries(formData).map(([k, v]) => [k, parseFloat(v) || 0])
         );
+        const requiredFields = Object.keys(formData);
+        const missingFields = requiredFields.filter(key => !featureData[key] && featureData[key] !== 0);
+        if (missingFields.length > 0) {
+          throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
+        }
         data = await submitPatientData(featureData, false);
       }
       onSubmit(data);
     } catch (error) {
-      console.error("Error submitting data:", error);
+      console.error('Error submitting data:', error);
+      setError(error.message || 'Failed to generate prediction. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const GlassInput = ({ label, name, type = "number", step = "0.1" }) => (
+  const GlassInput = ({ label, name, type = 'number', step = '0.1' }) => (
     <div className="group relative">
       <label className="block text-sm font-medium text-white/90 mb-2">{label}</label>
       <input
@@ -100,8 +138,15 @@ export default function InputForm({ onSubmit }) {
 
   return (
     <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
+      {/* Error Message */}
+      {error && (
+        <div className="mb-4 p-4 bg-red-500/20 text-white rounded-xl border border-red-500/40">
+          {error}
+        </div>
+      )}
+
       {/* Navigation Tabs */}
-      <div className="flex flex-wrap gap-2 mb-8 p-2  bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10">
+      <div className="flex flex-wrap gap-2 mb-8 p-2 bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10">
         {sections.map((section) => (
           <SectionTab
             key={section.id}
@@ -115,7 +160,7 @@ export default function InputForm({ onSubmit }) {
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Sleep & Fatigue */}
         {activeSection === 'sleep' && (
-          <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8  border border-white/20 shadow-2xl">
+          <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl">
             <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
               <FaBed className="text-3xl text-blue-300" />
               Sleep & Fatigue
@@ -162,61 +207,53 @@ export default function InputForm({ onSubmit }) {
         )}
 
         {/* Upload CSV */}
-{/* Upload CSV */}
-{/* Upload CSV */}
-{activeSection === 'upload' && (
-  <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl">
-    <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-      <FaUpload className="text-3xl text-cyan-300" />
-      Upload 4 CSV Files
-    </h3>
-    {['ESS', 'MoCA', 'GDS', 'DaTSCAN'].map((label, i) => (
-      <div key={i} className="mb-6">
-        <label className="flex items-center justify-between text-white/80 mb-3 font-medium">
-          <span>{label} CSV</span>
-          <div className="h-1 flex-1 ml-4 bg-gradient-to-r from-blue-500 to-pink-500 rounded-full" />
-        </label>
-        <div
-          className={`relative p-8 border-2 border-dashed rounded-2xl transition-all duration-300 cursor-pointer
-                      ${file && file[i]
-                        ? 'border-green-400 bg-green-500/10'
-                        : 'border-white/30 hover:border-white/50 hover:bg-white/5'}`}
-          onClick={() => document.getElementById(`file-input-${i}`).click()}
-        >
-          <input
-            id={`file-input-${i}`}
-            type="file"
-            accept=".csv"
-            onChange={(e) => {
-              const newFiles = [...(file || [])];
-              newFiles[i] = e.target.files[0];
-              setFile(newFiles);
-            }}
-            className="hidden"
-          />
-          <div className="text-center">
-            <div className="text-6xl mb-4">
-              {file && file[i] ? (
-                <FaFileAlt className="mx-auto text-white" />
-              ) : (
-                <FaCloudUploadAlt className="mx-auto text-white animate-bounce" />
-              )}
-            </div>
-            <p className="text-white text-base font-medium mb-1">
-              {file && file[i] ? file[i].name : `Drop or click to upload ${label} CSV`}
-            </p>
-            <p className="text-white/60 text-xs">
-              Only .csv format supported
-            </p>
+        {activeSection === 'upload' && (
+          <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl">
+            <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+              <FaUpload className="text-3xl text-cyan-300" />
+              Upload 4 CSV Files
+            </h3>
+            {['ESS', 'MoCA', 'GDS', 'DaTSCAN'].map((label, i) => (
+              <div key={i} className="mb-6">
+                <label className="flex items-center justify-between text-white/80 mb-3 font-medium">
+                  <span>{label} CSV</span>
+                  <div className="h-1 flex-1 ml-4 bg-gradient-to-r from-blue-500 to-pink-500 rounded-full" />
+                </label>
+                <div
+                  className={`relative p-8 border-2 border-dashed rounded-2xl transition-all duration-300 cursor-pointer
+                              ${file[i] ? 'border-green-400 bg-green-500/10' : 'border-white/30 hover:border-white/50 hover:bg-white/5'}`}
+                  onClick={() => document.getElementById(`file-input-${i}`).click()}
+                >
+                  <input
+                    id={`file-input-${i}`}
+                    type="file"
+                    accept=".csv"
+                    onChange={handleFileChange(i)}
+                    className="hidden"
+                  />
+                  <div className="text-center">
+                    <div className="text-6xl mb-4">
+                      {file[i] ? (
+                        <FaFileAlt className="mx-auto text-white" />
+                      ) : (
+                        <FaCloudUploadAlt className="mx-auto text-white animate-bounce" />
+                      )}
+                    </div>
+                    <p className="text-white text-base font-medium mb-1">
+                      {file[i] ? file[i].name : `Drop or click to upload ${label} CSV`}
+                    </p>
+                    <p className="text-white/60 text-xs">
+                      Only .csv format supported
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
-        </div>
-      </div>
-    ))}
-  </div>
-)}
+        )}
 
         {/* Submit Button */}
-      <div className="flex justify-center pt-8">
+        <div className="flex justify-center pt-8">
           <button 
             type="submit" 
             disabled={isLoading}
@@ -233,7 +270,7 @@ export default function InputForm({ onSubmit }) {
                 </>
               ) : (
                 <>
-                  <FaChartBar className="text-2xl" /> {/* Replaced emoji with FaChartBar */}
+                  <FaChartBar className="text-2xl" /> 
                   Generate Prediction
                 </>
               )}

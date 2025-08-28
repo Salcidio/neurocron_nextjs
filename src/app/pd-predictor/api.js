@@ -1,5 +1,7 @@
 export async function submitPatientData(data, isFile) {
-  const url = process.env.NEXT_PUBLIC_API_URL + "/predict";
+  const url =
+    "https://huggingface.co/spaces/Amaro2a/flake_transfomers/blob/main/app" +
+    (isFile ? "/predict/files" : "/predict");
   const headers = isFile ? {} : { "Content-Type": "application/json" };
   const body = isFile ? data : JSON.stringify(data);
 
