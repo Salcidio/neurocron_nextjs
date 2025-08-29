@@ -1,60 +1,69 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
-import { supabase } from "../../lib/supabaseClient";
+import InputForm from "./input-form";
+import Results from "./results";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Head from "next/head";
-import { FaSnowflake } from "react-icons/fa";
+import { motion } from "framer-motion";
+import { Sparkles, Brain, Zap, MessageCircle } from "lucide-react";
+import {
+  FaSnowflake,
+  FaRobot,
+  FaChartLine,
+  FaMicroscope,
+  FaRegLightbulb,
+  FaPen,
+  FaStethoscope,
+  FaFileUpload,
+  FaChartBar,
+  FaCheckCircle,
+  FaRedoAlt,
+  FaFileAlt,
+} from "react-icons/fa";
+import { GiArtificialHive } from "react-icons/gi";
+import { supabase } from "../../lib/supabaseClient";
 import Sidebar from "../../components/SideBar";
 
-import {
-  ChevronDown,
-  Brain,
-  Zap,
-  Download,
-  Settings,
-  Play,
-  Pause,
-} from "lucide-react";
-
-export default function ParkinsonsMRITool() {
-  const [selectedStage, setSelectedStage] = useState("early");
-  const [selectedView, setSelectedView] = useState("axial");
-  const [generatedImage, setGeneratedImage] = useState(null);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [analysisResults, setAnalysisResults] = useState(null);
-  const [customPrompt, setCustomPrompt] = useState("");
-  const [animationPlaying, setAnimationPlaying] = useState(false);
+export default function ParkinsonPredictor() {
+  const [user, setUser] = useState(null);
+  const [prediction, setPrediction] = useState(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [error, setError] = useState(null);
+  const [signingOut, setSigningOut] = useState(false);
   const router = useRouter();
-  const [messages, setMessages] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  //auth section --snowFlake
+  // Reset form callback for InputForm
+  const [resetForm, setResetForm] = useState(() => () => {});
+
+  // auth section --snowflake
   useEffect(() => {
-    let isMounted = true;
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) {
-        router.replace("/");
-      } else if (isMounted) {
-        setUser(user);
-        setLoading(false);
+    const checkAuth = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) {
+        router.push("/"); // not logged in → redirect to root
+      } else {
+        setUser(session.user);
+      }
+      setLoading(false);
+    };
+
+    checkAuth();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        router.push("/");
+      } else {
+        setUser(session.user);
       }
     });
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (_, session) => {
-        if (!session?.user) {
-          //auth section --snowFlake
-          router.replace("/auth");
-        } else {
-          setUser(session.user);
-        }
-      }
-    );
-    return () => {
-      isMounted = false;
-      authListener.subscription.unsubscribe();
-    };
-  }, [router, messages.length]); // messages.length is in the dependency array to prevent stale closure issues for messages
-  //End auth section --snowFlake
+    return () => subscription.unsubscribe();
+  }, [router]);
 
   const handleSignOut = async () => {
     setSigningOut(true);
@@ -63,471 +72,285 @@ export default function ParkinsonsMRITool() {
       if (error) throw error;
       console.log("User signed out successfully");
       router.push("/");
-      setSigningOut(false); //trying to exit to the page before the loading exiting end showing
     } catch (error) {
-      setSigningOut(false);
       console.error("Error signing out:", error.message);
-    }
-  };
-  const diseaseStages = {
-    healthy: {
-      label: "Healthy Control",
-      description: "Normal brain structure with intact substantia nigra",
-      color: "#22c55e",
-    },
-    early: {
-      label: "Early Stage PD",
-      description: "Mild dopaminergic neuron loss, subtle structural changes",
-      color: "#f59e0b",
-    },
-    moderate: {
-      label: "Moderate Stage PD",
-      description: "Moderate substantia nigra degeneration, visible atrophy",
-      color: "#f97316",
-    },
-    advanced: {
-      label: "Advanced Stage PD",
-      description: "Severe neurodegeneration, significant structural changes",
-      color: "#dc2626",
-    },
-  };
-
-  const viewTypes = {
-    axial: "Axial [ Horizontal ]",
-    sagittal: "Sagittal [ Side ]",
-    coronal: "Coronal [ Frontal ]",
-    dti: "DTI [ Diffusion Tensor ]",
-    fmri: "fMRI [ Functional ]",
-  };
-
-  // API endpoint for the FastAPI backend hosted on Hugging Face Spaces
-  const API_URL = "https://amaro2a-flakeai.hf.space/generate-image";
-
-  // Formula for calculating temporal progression metrics
-  const calculateProgressionMetrics = (stage) => {
-    const baseMetrics = {
-      substantiaNigraIntensity: 95, // Percentage (healthy baseline)
-      brainVolume: 1400, // cm³ (healthy baseline)
-      asymmetryIndex: 2, // Low asymmetry in healthy brain
-      confidenceScore: 95, // High confidence for healthy brain
-    };
-
-    // Progression factors for each stage (simulating disease progression)
-    const progressionFactors = {
-      healthy: { sn: 1, bv: 1, ai: 1, cs: 1 },
-      early: { sn: 0.85, bv: 0.95, ai: 1.5, cs: 0.9 },
-      moderate: { sn: 0.65, bv: 0.85, ai: 2.5, cs: 0.85 },
-      advanced: { sn: 0.45, bv: 0.75, ai: 4, cs: 0.8 },
-    };
-
-    const factor = progressionFactors[stage];
-    return {
-      substantiaNigraIntensity:
-        baseMetrics.substantiaNigraIntensity * factor.sn +
-        (Math.random() * 5 - 2.5), // ±2.5% noise
-      brainVolume:
-        baseMetrics.brainVolume * factor.bv + (Math.random() * 20 - 10), // ±10 cm³ noise
-      asymmetryIndex:
-        baseMetrics.asymmetryIndex * factor.ai + (Math.random() * 0.5 - 0.25), // ±0.25 noise
-      confidenceScore:
-        baseMetrics.confidenceScore * factor.cs + (Math.random() * 5 - 2.5), // ±2.5% noise
-    };
-  };
-
-  // Function to generate MRI image by calling the FastAPI backend
-  const generateMRIImage = async () => {
-    setIsGenerating(true);
-
-    const prompt =
-      customPrompt ||
-      `${selectedStage} parkinson disease brain MRI ${selectedView} view, medical imaging, high resolution, clinical quality`;
-
-    // Make API call to FastAPI endpoint
-    try {
-      const response = await fetch(API_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.NEXT_PUBLIC_HF_API_KEY}`,
-        },
-        body: JSON.stringify({
-          prompt,
-          num_steps: 1,
-          guidance_scale: 7.5,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status} ${response.statusText}`);
-      }
-
-      // Get the image as a blob and create a URL for it
-      const imageBlob = await response.blob();
-      const imageUrl = URL.createObjectURL(imageBlob);
-      setGeneratedImage(imageUrl);
-
-      // Calculate analysis metrics based on the selected stage
-      const analysis = calculateProgressionMetrics(selectedStage);
-      setAnalysisResults(analysis);
-    } catch (error) {
-      console.error("Error generating MRI image:", error);
-      setGeneratedImage(null);
-      setAnalysisResults(null);
-      alert("Failed to generate MRI image. Please try again.");
+      setError("Failed to sign out. Please try again.");
     } finally {
-      setIsGenerating(false);
+      setSigningOut(false);
     }
   };
 
-  // Function to animate disease progression
-  const startAnimation = () => {
-    setAnimationPlaying(true);
-    const stages = ["healthy", "early", "moderate", "advanced"];
-    let currentIndex = 0;
-
-    const interval = setInterval(async () => {
-      setSelectedStage(stages[currentIndex]);
-      await generateMRIImage();
-      currentIndex = (currentIndex + 1) % stages.length;
-    }, 5000); // Increased interval to account for API call latency
-
+  const handlePrediction = (data) => {
+    setIsAnalyzing(true);
+    setError(null);
     setTimeout(() => {
-      clearInterval(interval);
-      setAnimationPlaying(false);
-    }, 20000); // 4 stages * 5 seconds each
-  };
-
-  // Cleanup image URLs to prevent memory leaks
-  useEffect(() => {
-    return () => {
-      if (generatedImage) {
-        URL.revokeObjectURL(generatedImage);
+      try {
+        // Handle both /predict and /predict/files responses
+        const predictionData =
+          data.source === "files" ? data.predictions[0] : data;
+        if (!predictionData.predicted_biomarkers) {
+          throw new Error("Invalid prediction data received.");
+        }
+        setPrediction(predictionData);
+      } catch (err) {
+        console.error("Error processing prediction:", err);
+        setError("Failed to process prediction. Please try again.");
+      } finally {
+        setIsAnalyzing(false);
       }
-    };
-  }, [generatedImage]);
-
+    }, 2000);
+  };
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
+    <div className="pl-10 min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 relative overflow-hidden">
       {/* Sidebar */}
       <Sidebar onSignOut={handleSignOut} />
-      <Head>
-        <title>Flake laboratories</title>
-        <meta
-          name="description"
-          content="AI-powered MRI visualization for Parkinson's disease research and education"
-        />
-      </Head>
 
-      {/* Header */}
-      <div className="flex  items-center justify-center bg-black/20 backdrop-blur-sm border-b border-blue-500/20">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div>
-                <div className="flex items-center justify-center ">
-                  <FaSnowflake className="w-8 h-8 text-white relative z-10" />
-                </div>
+      {/* Background Visual Effects */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl animate-pulse"></div>
 
-                <h1 className="flex items-center justify-center text-2xl font-bold text-white">
-                  Flake AI
-                </h1>
-                <p className="text-blue-300 text-sm">
-                  Parkinson&apos;s Disease Visualization Tool
-                </p>
-              </div>
-            </div>
+        {/* Enhanced Floating Elements */}
+        {[...Array(30)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute animate-float"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 5}s`,
+              animationDuration: `${3 + Math.random() * 4}s`,
+            }}
+          >
+            {i % 5 === 0 && (
+              <Sparkles className="w-3 h-3 text-purple-400 opacity-60" />
+            )}
+            {i % 5 === 1 && (
+              <Zap className="w-3 h-3 text-yellow-400 opacity-60" />
+            )}
+            {i % 5 === 2 && (
+              <Brain className="w-3 h-3 text-blue-400 opacity-60" />
+            )}
+            {i % 5 === 3 && (
+              <MessageCircle className="w-3 h-3 text-pink-400 opacity-60" />
+            )}
+            {i % 5 === 4 && (
+              <FaSnowflake className="w-3 h-3 text-cyan-400 opacity-60" />
+            )}
           </div>
-        </div>
+        ))}
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Control Panel */}
-          <div className="bg-black/30 backdrop-blur-sm rounded-2xl border border-blue-500/20 p-6">
-            <h2 className="text-xl font-bold text-white mb-6 flex items-center">
-              <Settings className="w-5 h-5 mr-2" />
-              Generation Controls
-            </h2>
+      {/* Main Content */}
+      <div className="relative z-10 container mx-auto px-4 py-8">
+        {/* Error Message */}
+        {error && (
+          <div className="mb-8 p-4 bg-red-500/20 text-white rounded-xl border border-red-500/40">
+            {error}
+          </div>
+        )}
+        <div className="text-center mb-12">
+          <div
+            className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl 
+                          hover:shadow-blue-glow/20 transition-all duration-500 animate-float mb-8"
+          >
+            <div className="flex justify-center items-center py-5">
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ repeat: Infinity, duration: 8, ease: "linear" }}
+                className="bg-gradient-to-r from-blue-500 to-cyan-500 p-6 rounded-full"
+              >
+                <FaSnowflake className="w-16 h-16 text-white" />
+              </motion.div>
+            </div>
 
-            {/* Disease Stage Selection */}
-            <div className="space-y-4 mb-6">
-              <label className="text-blue-300 font-medium">Disease Stage</label>
-              <div className="grid grid-cols-2 gap-2">
-                {Object.entries(diseaseStages).map(([key, stage]) => (
-                  <button
-                    key={key}
-                    onClick={() => setSelectedStage(key)}
-                    className={`p-3 rounded-lg border transition-all ${
-                      selectedStage === key
-                        ? "border-blue-400 bg-blue-500/20 text-white"
-                        : "border-gray-600 bg-gray-800/50 text-gray-300 hover:bg-gray-700/50"
-                    }`}
-                  >
-                    <div className="text-sm font-medium">{stage.label}</div>
+            <div className="flex items-center justify-center gap-4 mb-6">
+              <div className="h-2 w-34 bg-gradient-to-r from-blue-500 to-transparent rounded-full" />
+              <div className="text-lg text-blue-300">Flake Laboratories.</div>
+              <div className="h-2 w-34 bg-gradient-to-l from-pink-500 to-transparent rounded-full" />
+            </div>
+          </div>
+
+          <div className="flex flex-wrap justify-center gap-4 mb-8">
+            {[
+              {
+                icon: <FaRobot />,
+                text: "AI-Powered Analysis",
+                color: "bg-blue-500/20 border-blue-500/30",
+              },
+              {
+                icon: <FaChartLine />,
+                text: "Multi-Year Projections",
+                color: "bg-purple-500/20 border-purple-500/30",
+              },
+              {
+                icon: <FaMicroscope />,
+                text: "Clinical context Data",
+                color: "bg-pink-500/20 border-pink-500/30",
+              },
+              {
+                icon: <FaRegLightbulb />,
+                text: "Research level insights",
+                color: "bg-green-500/20 border-green-500/30",
+              },
+            ].map((feature, i) => (
+              <div
+                key={i}
+                className={`${feature.color} backdrop-blur-xl rounded px-6 py-3 border 
+                                        hover:scale-110 transition-all duration-300 cursor-normal 
+                                        hover:shadow-lg hover:shadow-blue-glow/20`}
+              >
+                <div className="flex items-center gap-2 text-white font-medium">
+                  {feature.icon}
+                  {feature.text}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="max-w-7xl mx-auto">
+          {!prediction && !isAnalyzing && (
+            <div className="space-y-8">
+              <div className="bg-white/5 backdrop-blur-xl rounded-3xl p-6 border border-white/10 mb-8">
+                <h3 className="text-2xl font-bold text-white mb-4">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    {[
+                      {
+                        title: "Basic Info",
+                        desc: "Enter patient ID and assessment date",
+                        icon: <FaPen />,
+                      },
+                      {
+                        title: "Clinical Data",
+                        desc: "Input UPDRS scores and DaTscan results",
+                        icon: <FaStethoscope />,
+                      },
+                      {
+                        title: "Upload CSV",
+                        desc: "Or upload batch data for analysis",
+                        icon: <FaFileUpload />,
+                      },
+                      {
+                        title: "Get Results",
+                        desc: "View predictions and recommendations",
+                        icon: <FaChartBar />,
+                      },
+                    ].map((feature, i) => (
+                      <div
+                        key={i}
+                        className="text-center group hover:scale-105 transition-transform duration-300"
+                      >
+                        <div className="bg-blue-pink-gradient w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 text-white text-lg shadow-lg group-hover:shadow-blue-glow/50 transition-all duration-300">
+                          {feature.icon}
+                        </div>
+                        <h4 className="text-white font-semibold mb-1">
+                          {feature.title}
+                        </h4>
+                        <p className="text-white/70 text-sm">{feature.desc}</p>
+                      </div>
+                    ))}
+                  </div>
+                </h3>
+              </div>
+              <InputForm
+                onSubmit={handlePrediction}
+                onReset={(resetFn) => setResetForm(() => resetFn)}
+              />{" "}
+            </div>
+          )}
+
+          {isAnalyzing && (
+            <div className="flex items-center justify-center min-h-[60vh]">
+              <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-12 border border-white/20 shadow-2xl text-center">
+                <div className="relative mb-8">
+                  <div className="w-32 h-32 border-4 border-white/20 border-t-blue-400 rounded-full animate-spin mx-auto mb-6" />
+                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-20 h-20 bg-blue-pink-gradient rounded-full animate-pulse opacity-60" />
+                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-4xl animate-bounce text-white">
+                    <GiArtificialHive />
+                  </div>
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-4">
+                  Analyzing Patient Data
+                </h3>
+                <p className="text-white/70 mb-6">
+                  Our AI is processing your inputs and generating personalized
+                  progression insights...
+                </p>
+                <div className="space-y-3">
+                  {[
+                    "Processing clinical parameters",
+                    "Running progression models",
+                    "Calculating confidence intervals",
+                    "Generating recommendations",
+                  ].map((step, i) => (
                     <div
-                      className="w-full h-1 rounded mt-2"
-                      style={{ backgroundColor: stage.color }}
-                    />
-                  </button>
-                ))}
+                      key={i}
+                      className="flex items-center gap-3 text-white/80 animate-pulse"
+                      style={{ animationDelay: `${i * 500}ms` }}
+                    >
+                      <div className="w-2 h-2 bg-blue-400 rounded-full" />
+                      {step}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
+          )}
 
-            {/* View Type Selection */}
-            <div className="space-y-4 mb-6">
-              <label className="text-blue-300 font-medium py-5 jsutify-center align-center">
-                Anatomical descriptors
-              </label>
-              <select
-                value={selectedView}
-                onChange={(e) => setSelectedView(e.target.value)}
-                className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:border-blue-400"
-              >
-                {Object.entries(viewTypes).map(([key, label]) => (
-                  <option key={key} value={key}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Custom Prompt */}
-            <div className="space-y-4 mb-6">
-              <label className="text-blue-300 font-medium">
-                Custom Prompt (Optional)
-              </label>
-              <textarea
-                value={customPrompt}
-                onChange={(e) => setCustomPrompt(e.target.value)}
-                placeholder="Add specific details for generation..."
-                className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:border-blue-400 resize-none"
-                rows={3}
-              />
-            </div>
-
-            {/* Action Buttons */}
-            <div className="space-y-3">
-              <button
-                onClick={generateMRIImage}
-                disabled={isGenerating}
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 text-white font-medium py-3 rounded-lg transition-all flex items-center justify-center"
-              >
-                {isGenerating ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Generating...
-                  </>
-                ) : (
-                  <>
-                    <Zap className="w-4 h-4 mr-2" />
-                    Generate MRI
-                  </>
-                )}
-              </button>
-
-              <button
-                onClick={startAnimation}
-                disabled={animationPlaying}
-                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 text-white font-medium py-3 rounded-lg transition-all flex items-center justify-center"
-              >
-                {animationPlaying ? (
-                  <>
-                    <Pause className="w-4 h-4 mr-2" />
-                    Playing...
-                  </>
-                ) : (
-                  <>
-                    <Play className="w-4 h-4 mr-2" />
-                    Disease Progression
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* Generated Image Display */}
-          <div className="bg-black/30 backdrop-blur-sm rounded-2xl border border-blue-500/20 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-white">Generated MRI</h2>
-              {generatedImage && (
-                <a href={generatedImage} download="mri-image.png">
-                  <button className="text-blue-400 hover:text-blue-300 transition-colors">
-                    <Download className="w-5 h-5" />
-                  </button>
-                </a>
-              )}
-            </div>
-
-            <div className="aspect-square bg-gray-900 rounded-lg border border-gray-700 flex items-center justify-center overflow-hidden">
-              {generatedImage ? (
-                <img
-                  src={generatedImage}
-                  alt="Generated MRI"
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="text-center text-gray-400">
-                  <Brain className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                  <p>Generated MRI will appear here</p>
-                  <p className="text-sm mt-2">
-                    Configure settings and click Generate
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Current Stage Info */}
-            {generatedImage && (
-              <div className="mt-4 p-4 bg-gray-800/50 rounded-lg">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-medium text-white">
-                    {diseaseStages[selectedStage].label}
-                  </h3>
-                  <div
-                    className="w-3 h-3 rounded-full"
-                    style={{
-                      backgroundColor: diseaseStages[selectedStage].color,
-                    }}
-                  />
-                </div>
-                <p className="text-gray-300 text-sm">
-                  {diseaseStages[selectedStage].description}
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Analysis Results */}
-          <div className="bg-black/30 backdrop-blur-sm rounded-2xl border border-blue-500/20 p-6">
-            <h2 className="text-xl font-bold text-white mb-6">AI Analysis</h2>
-
-            {analysisResults ? (
-              <div className="space-y-6">
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-blue-300">
-                        Substantia Nigra Intensity
-                      </span>
-                      <span className="text-white">
-                        {analysisResults.substantiaNigraIntensity.toFixed(1)}%
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-700 rounded-full h-2">
-                      <div
-                        className="bg-gradient-to-r from-green-500 to-red-500 h-2 rounded-full transition-all"
-                        style={{
-                          width: `${analysisResults.substantiaNigraIntensity}%`,
-                        }}
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-blue-300">Brain Volume</span>
-                      <span className="text-white">
-                        {analysisResults.brainVolume.toFixed(0)} cm³
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-700 rounded-full h-2">
-                      <div
-                        className="bg-blue-500 h-2 rounded-full transition-all"
-                        style={{
-                          width: `${
-                            ((analysisResults.brainVolume - 1200) / 200) * 100
-                          }%`,
-                        }}
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-blue-300">Asymmetry Index</span>
-                      <span className="text-white">
-                        {analysisResults.asymmetryIndex.toFixed(2)}
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-700 rounded-full h-2">
-                      <div
-                        className="bg-yellow-500 h-2 rounded-full transition-all"
-                        style={{
-                          width: `${analysisResults.asymmetryIndex * 10}%`,
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="border-t border-gray-700 pt-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-blue-300">Confidence Score</span>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-white font-bold">
-                        {analysisResults.confidenceScore.toFixed(1)}%
-                      </span>
-                      <div
-                        className={`w-2 h-2 rounded-full ${
-                          analysisResults.confidenceScore > 90
-                            ? "bg-green-500"
-                            : analysisResults.confidenceScore > 75
-                            ? "bg-yellow-500"
-                            : "bg-red-500"
-                        }`}
-                      />
-                    </div>
+          {prediction && !isAnalyzing && (
+            <div className="space-y-8">
+              <div className="text-center mb-8">
+                <div className="bg-green-500/20 backdrop-blur-xl rounded-2xl p-6 border border-green-500/30 inline-block">
+                  <div className="flex items-center gap-3 text-green-200">
+                    <FaCheckCircle className="text-2xl animate-bounce" />
+                    <span className="text-xl font-semibold">
+                      Analysis Complete!
+                    </span>
+                    <FaCheckCircle className="text-2xl animate-bounce" />
                   </div>
                 </div>
               </div>
-            ) : (
-              <div className="text-center text-gray-400">
-                <div className="w-16 h-16 mx-auto mb-4 border-2 border-dashed border-gray-600 rounded-lg flex items-center justify-center">
-                  <ChevronDown className="w-8 h-8" />
-                </div>
-                <p>Analysis results will appear here</p>
-                <p className="text-sm mt-2">
-                  Generate an MRI to start analysis
-                </p>
+
+              <Results prediction={prediction} />
+
+              <div className="flex justify-center gap-4 pt-8">
+                <button
+                  onClick={() => {
+                    setPrediction(null);
+                    setIsAnalyzing(false);
+                  }}
+                  className="group px-8 py-4 bg-white/10 backdrop-blur-xl text-white font-semibold rounded-2xl 
+                             border border-white/20 hover:bg-white/20 hover:scale-105 transition-all duration-300 
+                             flex items-center gap-3"
+                >
+                  <FaRedoAlt className="text-xl" />
+                  New Analysis
+                </button>
+                <button
+                  onClick={() => window.print()}
+                  className="group px-8 py-4 bg-blue-pink-gradient text-white font-semibold rounded-2xl 
+                             hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-blue-glow/50 
+                             flex items-center gap-3"
+                >
+                  <FaFileAlt className="text-xl" />
+                  Export Report
+                </button>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
-        {/* Educational Info */}
-        <div className="mt-8 bg-black/30 backdrop-blur-sm rounded-2xl border border-blue-500/20 p-6">
-          <h2 className="text-xl font-bold text-white mb-4">About This Tool</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-sm">
-            <div>
-              <h3 className="font-medium text-blue-300 mb-2">AI Model</h3>
-              <p className="text-gray-300">
-                Stable Diffusion with custom LoRA adapter trained on
-                Parkinson&apos;s MRI datasets
-              </p>
-            </div>
-            <div>
-              <h3 className="font-medium text-blue-300 mb-2">Applications</h3>
-              <p className="text-gray-300">
-                Medical education, research visualization, and synthetic data
-                generation
-              </p>
-            </div>
-            <div>
-              <h3 className="font-medium text-blue-300 mb-2">Disease Stages</h3>
-              <p className="text-gray-300">
-                Visualizes progression from healthy brain to advanced
-                Parkinson&apos;s disease
-              </p>
-            </div>
-            <div>
-              <h3 className="font-medium text-blue-300 mb-2">Disclaimer</h3>
-              <p className="text-gray-300">
-                For research and educational purposes only. Not for clinical
-                diagnosis.
-              </p>
-            </div>
+        {/* Footer */}
+        <footer className="mt-16 text-center">
+          <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
+            <p className="text-white/60 text-sm">
+              © 2025 SnowFlake Research Laboratory • Advanced Healthcare
+              Analytics •
+            </p>
           </div>
-        </div>
+        </footer>
       </div>
     </div>
   );

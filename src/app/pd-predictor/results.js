@@ -140,15 +140,15 @@ export default function Results({ prediction }) {
     (animated.caudateR + animated.caudateL + animated.putamenR + animated.putamenL) / 4;
   let healthMessage, icon, color;
   if (healthLevel > 3.5) {
-    healthMessage = "Excellent dopaminergic integrity 🌟 — minimal degeneration signs.";
+    healthMessage = "Excellent dopaminergic integrity  — minimal degeneration signs.";
     icon = <FaHeartbeat className="text-green-400 text-3xl animate-pulse" />;
     color = "bg-green-500/20 border-green-500/40";
   } else if (healthLevel > 2.5) {
-    healthMessage = "Mild reduction in dopaminergic activity ⚖️ — keep monitoring regularly.";
+    healthMessage = "Mild reduction in dopaminergic activity  — keep monitoring regularly.";
     icon = <FaBalanceScale className="text-yellow-400 text-3xl animate-bounce" />;
     color = "bg-yellow-500/20 border-yellow-500/40";
   } else {
-    healthMessage = "Noticeable dopaminergic decline 🧠 — clinical follow-up recommended.";
+    healthMessage = "Noticeable dopaminergic decline  — clinical follow-up recommended.";
     icon = <FaMicroscope className="text-red-400 text-3xl animate-pulse" />;
     color = "bg-red-500/20 border-red-500/40";
   }

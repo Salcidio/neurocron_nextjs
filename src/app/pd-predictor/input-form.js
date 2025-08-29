@@ -1,50 +1,59 @@
-'use client';
-import { useState, useEffect } from 'react';
-import { FaUser, FaUpload, FaCloudUploadAlt, FaFileAlt, FaChartBar, FaBrain, FaBed, FaSmile } from 'react-icons/fa';
-import { submitPatientData } from './api';
+"use client";
+import { useState, useEffect } from "react";
+import {
+  FaUser,
+  FaUpload,
+  FaCloudUploadAlt,
+  FaFileAlt,
+  FaChartBar,
+  FaBrain,
+  FaBed,
+  FaSmile,
+} from "react-icons/fa";
+import { submitPatientData } from "./api";
 
 export default function InputForm({ onSubmit, onReset }) {
   const [formData, setFormData] = useState({
-    ESS_TOTAL: '',
-    ESS1: '',
-    ESS2: '',
-    GDSENRGY: '',
-    MCATOT: '',
-    MCAALTTM: '',
-    MCACUBE: '',
-    MCASER7: '',
-    MCAABSTR: '',
-    GDS_TOTAL: '',
-    GDSSATIS: '',
-    GDSHAPPY: ''
+    ESS_TOTAL: "",
+    ESS1: "",
+    ESS2: "",
+    GDSENRGY: "",
+    MCATOT: "",
+    MCAALTTM: "",
+    MCACUBE: "",
+    MCASER7: "",
+    MCAABSTR: "",
+    GDS_TOTAL: "",
+    GDSSATIS: "",
+    GDSHAPPY: "",
   });
   const [file, setFile] = useState([null, null, null, null]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [activeSection, setActiveSection] = useState('sleep');
+  const [activeSection, setActiveSection] = useState("sleep");
 
   // Provide reset function to parent
   useEffect(() => {
     onReset(() => {
       setFormData({
-        ESS_TOTAL: '',
-        ESS1: '',
-        ESS2: '',
-        GDSENRGY: '',
-        MCATOT: '',
-        MCAALTTM: '',
-        MCACUBE: '',
-        MCASER7: '',
-        MCAABSTR: '',
-        GDS_TOTAL: '',
-        GDSSATIS: '',
-        GDSHAPPY: ''
+        ESS_TOTAL: "",
+        ESS1: "",
+        ESS2: "",
+        GDSENRGY: "",
+        MCATOT: "",
+        MCAALTTM: "",
+        MCACUBE: "",
+        MCASER7: "",
+        MCAABSTR: "",
+        GDS_TOTAL: "",
+        GDSSATIS: "",
+        GDSHAPPY: "",
       });
       setFile([null, null, null, null]);
       setError(null);
-      setActiveSection('sleep');
+      setActiveSection("sleep");
     });
-  }, [onReset]);
+  },[]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -62,12 +71,12 @@ export default function InputForm({ onSubmit, onReset }) {
     setError(null);
     try {
       let data;
-      if (activeSection === 'upload' && file.every(f => f !== null)) {
+      if (activeSection === "upload" && file.every((f) => f !== null)) {
         // File upload mode
         const formDataFile = new FormData();
-        const fileLabels = ['ESS', 'MoCA', 'GDS', 'DaTSCAN'];
+        const fileLabels = ["ESS", "MoCA", "GDS", "DaTSCAN"];
         file.forEach((f, idx) => {
-          if (f) formDataFile.append('files', f, `${fileLabels[idx]}.csv`);
+          if (f) formDataFile.append("files", f, `${fileLabels[idx]}.csv`);
         });
         data = await submitPatientData(formDataFile, true);
       } else {
@@ -76,24 +85,32 @@ export default function InputForm({ onSubmit, onReset }) {
           Object.entries(formData).map(([k, v]) => [k, parseFloat(v) || 0])
         );
         const requiredFields = Object.keys(formData);
-        const missingFields = requiredFields.filter(key => !featureData[key] && featureData[key] !== 0);
+        const missingFields = requiredFields.filter(
+          (key) => !featureData[key] && featureData[key] !== 0
+        );
         if (missingFields.length > 0) {
-          throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
+          throw new Error(
+            `Missing required fields: ${missingFields.join(", ")}`
+          );
         }
         data = await submitPatientData(featureData, false);
       }
       onSubmit(data);
     } catch (error) {
-      console.error('Error submitting data:', error);
-      setError(error.message || 'Failed to generate prediction. Please try again.');
+      console.error("Error submitting data:", error);
+      setError(
+        error.message || "Failed to generate prediction. Please try again."
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
-  const GlassInput = ({ label, name, type = 'number', step = '0.1' }) => (
+  const GlassInput = ({ label, name, type = "number", step = "1" }) => (
     <div className="group relative">
-      <label className="block text-sm font-medium text-white/90 mb-2">{label}</label>
+      <label className="block text-sm font-medium text-white/90 mb-2">
+        {label}
+      </label>
       <input
         type={type}
         name={name}
@@ -111,10 +128,26 @@ export default function InputForm({ onSubmit, onReset }) {
   );
 
   const sections = [
-    { id: 'sleep', name: 'Sleep & Fatigue', icon: <FaBed className="text-lg" /> },
-    { id: 'cognition', name: 'Cognition', icon: <FaBrain className="text-lg" /> },
-    { id: 'mood', name: 'Mood & Depression', icon: <FaSmile className="text-lg" /> },
-    { id: 'upload', name: 'Upload CSV', icon: <FaUpload className="text-lg" /> }
+    {
+      id: "sleep",
+      name: "Sleep & Fatigue",
+      icon: <FaBed className="text-lg" />,
+    },
+    {
+      id: "cognition",
+      name: "Cognition",
+      icon: <FaBrain className="text-lg" />,
+    },
+    {
+      id: "mood",
+      name: "Mood & Depression",
+      icon: <FaSmile className="text-lg" />,
+    },
+    {
+      id: "upload",
+      name: "Upload CSV",
+      icon: <FaUpload className="text-lg" />,
+    },
   ];
 
   const SectionTab = ({ section, isActive, onClick }) => (
@@ -122,10 +155,10 @@ export default function InputForm({ onSubmit, onReset }) {
       type="button"
       onClick={onClick}
       className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300 
-                  relative overflow-hidden group ${
-                    isActive 
-                      ? 'bg-blue-pink-gradient text-white shadow-blue-glow' 
-                      : 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white'
+                  relative overflow-hidden group cursor-pointer ${
+                    isActive
+                      ? "bg-blue-pink-gradient text-white shadow-blue-glow"
+                      : "bg-white/10 text-white/70 hover:bg-white/20 hover:text-white"
                   }`}
     >
       {section.icon}
@@ -138,15 +171,14 @@ export default function InputForm({ onSubmit, onReset }) {
 
   return (
     <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
-      {/* Error Message */}
+      {/*Error Message*/}
       {error && (
-        <div className="mb-4 p-4 bg-red-500/20 text-white rounded-xl border border-red-500/40">
+        <div className="mb-8 p-4 bg-red-500/20 text-white rounded-xl border border-red-500/40">
           {error}
         </div>
       )}
-
       {/* Navigation Tabs */}
-      <div className="flex flex-wrap gap-2 mb-8 p-2 bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10">
+      <div className="flex flex-wrap gap-2 mb-8 p-2 bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 ">
         {sections.map((section) => (
           <SectionTab
             key={section.id}
@@ -159,7 +191,7 @@ export default function InputForm({ onSubmit, onReset }) {
 
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Sleep & Fatigue */}
-        {activeSection === 'sleep' && (
+        {activeSection === "sleep" && (
           <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl">
             <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
               <FaBed className="text-3xl text-blue-300" />
@@ -175,7 +207,7 @@ export default function InputForm({ onSubmit, onReset }) {
         )}
 
         {/* Cognition */}
-        {activeSection === 'cognition' && (
+        {activeSection === "cognition" && (
           <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl">
             <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
               <FaBrain className="text-3xl text-pink-300" />
@@ -192,7 +224,7 @@ export default function InputForm({ onSubmit, onReset }) {
         )}
 
         {/* Mood & Depression */}
-        {activeSection === 'mood' && (
+        {activeSection === "mood" && (
           <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl">
             <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
               <FaSmile className="text-3xl text-yellow-300" />
@@ -207,13 +239,13 @@ export default function InputForm({ onSubmit, onReset }) {
         )}
 
         {/* Upload CSV */}
-        {activeSection === 'upload' && (
+        {activeSection === "upload" && (
           <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl">
             <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
               <FaUpload className="text-3xl text-cyan-300" />
               Upload 4 CSV Files
             </h3>
-            {['ESS', 'MoCA', 'GDS', 'DaTSCAN'].map((label, i) => (
+            {["ESS", "MoCA", "GDS", "DaTSCAN"].map((label, i) => (
               <div key={i} className="mb-6">
                 <label className="flex items-center justify-between text-white/80 mb-3 font-medium">
                   <span>{label} CSV</span>
@@ -221,8 +253,14 @@ export default function InputForm({ onSubmit, onReset }) {
                 </label>
                 <div
                   className={`relative p-8 border-2 border-dashed rounded-2xl transition-all duration-300 cursor-pointer
-                              ${file[i] ? 'border-green-400 bg-green-500/10' : 'border-white/30 hover:border-white/50 hover:bg-white/5'}`}
-                  onClick={() => document.getElementById(`file-input-${i}`).click()}
+                      ${
+                        file && file[i]
+                          ? "border-green-400 bg-green-500/10"
+                          : "border-white/30 hover:border-white/50 hover:bg-white/5"
+                      }`}
+                  onClick={() =>
+                    document.getElementById(`file-input-${i}`).click()
+                  }
                 >
                   <input
                     id={`file-input-${i}`}
@@ -233,14 +271,16 @@ export default function InputForm({ onSubmit, onReset }) {
                   />
                   <div className="text-center">
                     <div className="text-6xl mb-4">
-                      {file[i] ? (
+                      {file && file[i] ? (
                         <FaFileAlt className="mx-auto text-white" />
                       ) : (
                         <FaCloudUploadAlt className="mx-auto text-white animate-bounce" />
                       )}
                     </div>
                     <p className="text-white text-base font-medium mb-1">
-                      {file[i] ? file[i].name : `Drop or click to upload ${label} CSV`}
+                      {file && file[i]
+                        ? file[i].name
+                        : `Drop or click to upload ${label} CSV`}
                     </p>
                     <p className="text-white/60 text-xs">
                       Only .csv format supported
@@ -254,8 +294,8 @@ export default function InputForm({ onSubmit, onReset }) {
 
         {/* Submit Button */}
         <div className="flex justify-center pt-8">
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             disabled={isLoading}
             className="group relative px-12 py-4 bg-blue-pink-gradient text-white font-bold text-lg rounded-2xl 
                        shadow-2xl hover:shadow-blue-glow transition-all duration-300 hover:scale-105 cursor-pointer
@@ -270,16 +310,20 @@ export default function InputForm({ onSubmit, onReset }) {
                 </>
               ) : (
                 <>
-                  <FaChartBar className="text-2xl" /> 
+                  <FaChartBar className="text-2xl" />
                   Generate Prediction
                 </>
               )}
             </div>
-            <div className="absolute inset-0 bg-gradient-to-r from-pink-600 to-blue-600 opacity-0 
-                            group-hover:opacity-100 transition-opacity duration-300" />
+            <div
+              className="absolute inset-0 bg-gradient-to-r from-pink-600 to-blue-600 opacity-0 
+                            group-hover:opacity-100 transition-opacity duration-300"
+            />
             {!isLoading && (
-              <div className="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-full 
-                              group-hover:translate-x-full transition-transform duration-700" />
+              <div
+                className="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-full 
+                              group-hover:translate-x-full transition-transform duration-700"
+              />
             )}
           </button>
         </div>

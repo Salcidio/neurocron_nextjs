@@ -30,40 +30,40 @@ export default function ParkinsonPredictor() {
   const [error, setError] = useState(null);
   const [signingOut, setSigningOut] = useState(false);
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   // Reset form callback for InputForm
   const [resetForm, setResetForm] = useState(() => () => {});
 
-  // auth section --snowflake
-  useEffect(() => {
-    const checkAuth = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+  // // auth section --snowflake
+  // useEffect(() => {
+  //   const checkAuth = async () => {
+  //     const {
+  //       data: { session },
+  //     } = await supabase.auth.getSession();
 
-      if (!session) {
-        router.push("/"); // not logged in → redirect to root
-      } else {
-        setUser(session.user);
-      }
-      setLoading(false);
-    };
+  //     if (!session) {
+  //       router.push("/"); // not logged in → redirect to root
+  //     } else {
+  //       setUser(session.user);
+  //     }
+  //     setLoading(false);
+  //   };
 
-    checkAuth();
+  //   checkAuth();
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session) {
-        router.push("/");
-      } else {
-        setUser(session.user);
-      }
-    });
+  //   const {
+  //     data: { subscription },
+  //   } = supabase.auth.onAuthStateChange((_event, session) => {
+  //     if (!session) {
+  //       router.push("/");
+  //     } else {
+  //       setUser(session.user);
+  //     }
+  //   });
 
-    return () => subscription.unsubscribe();
-  }, [router]);
+  //   return () => subscription.unsubscribe();
+  // }, [router]);
 
   const handleSignOut = async () => {
     setSigningOut(true);
@@ -123,7 +123,6 @@ export default function ParkinsonPredictor() {
       </div>
     );
   }
-
   return (
     <div className="pl-10 min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 relative overflow-hidden">
       {/* Sidebar */}
@@ -168,13 +167,12 @@ export default function ParkinsonPredictor() {
 
       {/* Main Content */}
       <div className="relative z-10 container mx-auto px-4 py-8">
-        {/* Error Message */}
+        {/*Error Message*/}
         {error && (
           <div className="mb-8 p-4 bg-red-500/20 text-white rounded-xl border border-red-500/40">
             {error}
           </div>
         )}
-
         <div className="text-center mb-12">
           <div
             className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl 
@@ -345,7 +343,6 @@ export default function ParkinsonPredictor() {
                   onClick={() => {
                     setPrediction(null);
                     setIsAnalyzing(false);
-                    resetForm(); // Reset InputForm state
                   }}
                   className="group px-8 py-4 bg-white/10 backdrop-blur-xl text-white font-semibold rounded-2xl 
                              border border-white/20 hover:bg-white/20 hover:scale-105 transition-all duration-300 
