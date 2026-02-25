@@ -194,9 +194,9 @@ export default function ChatPage() {
     // Loading screen
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900  to-blue-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 flex items-center justify-center">
         <div className="text-white text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-400 mx-auto mb-4"></div>
           <p>Loading</p>
         </div>
       </div>
@@ -205,9 +205,9 @@ export default function ChatPage() {
   // Loading screen for signing out
   if (signingOut) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-1000 via-blue to-blue-800 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 flex items-center justify-center">
         <div className="text-white text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-400 mx-auto mb-4"></div>
           <p>Exiting...</p>
         </div>
       </div>
@@ -215,16 +215,16 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-1000 via-blue-1000 to-blue-1000  text-white relative overflow-hidden flex">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 text-white relative overflow-hidden flex">
       {/* Sidebar */}
       <Sidebar onSignOut={handleSignOut} />
 
       {/* Animated background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 to-blue-900/20 -z-10"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 to-blue-900/20 -z-10"></div>
       <div className="absolute inset-0 -z-10">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl animate-pulse delay-200"></div>
+        <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl animate-pulse delay-200"></div>
       </div>
 
       {/* Floating Particles */}
@@ -242,13 +242,13 @@ export default function ChatPage() {
       ))}
 
       {/* Main content area */}
-      <div className="flex-1 flex flex-col relative z-10">
+      <div className="flex-1 flex flex-col relative z-10 ml-16">
         {/* Header - now specific to chat page actions */}
         {!showWelcome && (
-          <header className="relative z-20 w-full bg-black/50 backdrop-blur-sm p-2 flex items-center justify-end">
+          <header className="relative z-20 w-full bg-white/5 backdrop-blur-xl p-2 flex items-center justify-end border-b border-white/10">
             <button
               onClick={clearChat}
-              className="p-2 bg-blue-600 rounded-md text-white font-medium hover:shadow-md hover:shadow-blue-500/25 transform hover:scale-105 transition-all duration-200 border border-blue-400/50 cursor-pointer"
+              className="p-2 bg-purple-600 rounded-md text-white font-medium hover:shadow-md hover:shadow-purple-500/25 transform hover:scale-105 transition-all duration-200 border border-purple-400/50 cursor-pointer"
               aria-label="Clear Chat"
             >
               <MessageSquarePlus size={20} />
@@ -297,21 +297,21 @@ export default function ChatPage() {
                   </div>
 
                   <div className="grid grid-cols-2 gap-4 max-w-md mx-auto mb-8">
-                    <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 hover:bg-white/15 transition-all duration-200">
+                    <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-4 border border-white/20 hover:bg-white/15 transition-all duration-200">
                       <p className="text-white text-sm">
                         <BookA className="w-8 h-8 text-pink-400 mx-auto mb-2" />
                         Parkinson aware context
                       </p>
                     </div>
-                    <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 hover:bg-white/15 transition-all duration-200">
+                    <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-4 border border-white/20 hover:bg-white/15 transition-all duration-200">
                       <MessageCircle className="w-8 h-8 text-pink-400 mx-auto mb-2" />
                       <p className="text-white text-sm">Real-time Responses</p>
                     </div>
-                    <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 hover:bg-white/15 transition-all duration-200">
+                    <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-4 border border-white/20 hover:bg-white/15 transition-all duration-200">
                       <Brain className="w-8 h-8 text-blue-400 mx-auto mb-2" />
                       <p className="text-white text-sm">Smart Context Memory</p>
                     </div>
-                    <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 hover:bg-white/15 transition-all duration-200">
+                    <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-4 border border-white/20 hover:bg-white/15 transition-all duration-200">
                       <Zap className="w-8 h-8 text-yellow-400 mx-auto mb-2" />
                       <p className="text-white text-sm">Lightning Fast</p>
                     </div>
@@ -367,11 +367,11 @@ export default function ChatPage() {
                     {/* Message bubble */}
                     <div
                       className={`
-                        flex-1 max-w-4xl p-5 rounded-2xl border backdrop-blur-sm
+                        flex-1 max-w-4xl p-5 rounded-3xl border backdrop-blur-xl
                         ${
                           message.type === "user"
-                            ? "bg-gradient-to-r from-blue-900/50 to-blue-900/50 border-blue-500/50 shadow-lg shadow-blue-500/20"
-                            : "bg-gradient-to-r from-blue-900/50 to-blue-900/50 border-blue-500/50 shadow-lg shadow-blue-500/20"
+                            ? "bg-white/15 border-white/30 shadow-2xl"
+                            : "bg-white/5 border-white/15 shadow-xl"
                         }
                       `}
                     >
@@ -403,15 +403,15 @@ export default function ChatPage() {
                     <div className="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center border-2 bg-gradient-to-r from-blue-500 to-blue-500 border-blue-400 shadow-lg shadow-blue-500/50">
                       <FaSnowflake size={22} className="text-white" />
                     </div>
-                    <div className="flex-1 max-w-4xl p-5 rounded-2xl border backdrop-blur-sm bg-gradient-to-r from-blue-900/50 to-blue-900/50 border-blue-500/50 shadow-lg shadow-blue-500/20">
+                    <div className="flex-1 max-w-4xl p-5 rounded-3xl border backdrop-blur-xl bg-white/5 border-white/10 shadow-xl">
                       <div className="flex items-center space-x-3">
                         <div className="flex space-x-1">
-                          <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
-                          <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce delay-150"></div>
-                          <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce delay-300"></div>
+                          <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"></div>
+                          <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce delay-150"></div>
+                          <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce delay-300"></div>
                         </div>
-                        <span className="text-gray-400 text-sm">
-                          Waiting for Flake ai ...
+                        <span className="text-gray-400 text-sm italic">
+                          Flake AI is thinking...
                         </span>
                       </div>
                     </div>

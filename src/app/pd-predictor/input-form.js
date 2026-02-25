@@ -120,8 +120,8 @@ export default function InputForm({ onSubmit, onReset }) {
         required
         className="w-full p-4 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl 
                    text-white placeholder-white/50 focus:outline-none focus:ring-2 
-                   focus:ring-blue-400/50 focus:border-blue-400/50 transition-all duration-300
-                   hover:bg-white/20 hover:border-white/30 shadow-lg hover:shadow-blue-glow/20
+                   focus:ring-purple-400/50 focus:border-purple-400/50 transition-all duration-300
+                   hover:bg-white/15 hover:border-white/30 shadow-lg hover:shadow-blue-glow/20
                    group-hover:transform group-hover:scale-[1.02]"
       />
     </div>
@@ -178,7 +178,7 @@ export default function InputForm({ onSubmit, onReset }) {
         </div>
       )}
       {/* Navigation Tabs */}
-      <div className="flex flex-wrap gap-2 mb-8 p-2 bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 ">
+      <div className="flex flex-wrap gap-2 mb-8 p-3 bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 shadow-xl">
         {sections.map((section) => (
           <SectionTab
             key={section.id}
@@ -297,7 +297,7 @@ export default function InputForm({ onSubmit, onReset }) {
           <button
             type="submit"
             disabled={isLoading}
-            className="group relative px-12 py-4 bg-blue-pink-gradient text-white font-bold text-lg rounded-2xl 
+            className="group relative px-12 py-4 bg-blue-pink-gradient text-white font-bold text-lg rounded-3xl 
                        shadow-2xl hover:shadow-blue-glow transition-all duration-300 hover:scale-105 cursor-pointer
                        disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 
                        overflow-hidden"

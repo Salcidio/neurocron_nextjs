@@ -91,7 +91,10 @@ export default function ParkinsonPredictor() {
         if (!predictionData.predicted_biomarkers) {
           throw new Error("Invalid prediction data received.");
         }
+        // Store in localStorage so the analysis page can read it
+        localStorage.setItem("neurocron_prediction", JSON.stringify(predictionData));
         setPrediction(predictionData);
+        router.push("/analysis");
       } catch (err) {
         console.error("Error processing prediction:", err);
         setError("Failed to process prediction. Please try again.");
@@ -104,9 +107,9 @@ export default function ParkinsonPredictor() {
   // Loading screen
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900 to-blue-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 flex items-center justify-center">
         <div className="text-white text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-400 mx-auto mb-4"></div>
           <p>Loading</p>
         </div>
       </div>
@@ -115,16 +118,16 @@ export default function ParkinsonPredictor() {
   // Loading screen for signing out
   if (signingOut) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-1000 via-blue to-blue-800 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 flex items-center justify-center">
         <div className="text-white text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-400 mx-auto mb-4"></div>
           <p>Exiting...</p>
         </div>
       </div>
     );
   }
   return (
-    <div className="pl-10 min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 relative overflow-hidden">
+    <div className="ml-16 min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 relative overflow-hidden">
       {/* Sidebar */}
       <Sidebar onSignOut={handleSignOut} />
 
@@ -220,7 +223,7 @@ export default function ParkinsonPredictor() {
             ].map((feature, i) => (
               <div
                 key={i}
-                className={`${feature.color} backdrop-blur-xl rounded px-6 py-3 border 
+                className={`${feature.color} backdrop-blur-xl rounded-2xl px-6 py-3 border 
                                         hover:scale-110 transition-all duration-300 cursor-normal 
                                         hover:shadow-lg hover:shadow-blue-glow/20`}
               >
@@ -325,7 +328,7 @@ export default function ParkinsonPredictor() {
           {prediction && !isAnalyzing && (
             <div className="space-y-8">
               <div className="text-center mb-8">
-                <div className="bg-green-500/20 backdrop-blur-xl rounded-2xl p-6 border border-green-500/30 inline-block">
+                <div className="bg-green-500/20 backdrop-blur-xl rounded-3xl p-6 border border-green-500/30 inline-block">
                   <div className="flex items-center gap-3 text-green-200">
                     <FaCheckCircle className="text-2xl animate-bounce" />
                     <span className="text-xl font-semibold">
@@ -344,7 +347,7 @@ export default function ParkinsonPredictor() {
                     setPrediction(null);
                     setIsAnalyzing(false);
                   }}
-                  className="group px-8 py-4 bg-white/10 backdrop-blur-xl text-white font-semibold rounded-2xl 
+                  className="group px-8 py-4 bg-white/10 backdrop-blur-xl text-white font-semibold rounded-3xl 
                              border border-white/20 hover:bg-white/20 hover:scale-105 transition-all duration-300 
                              flex items-center gap-3"
                 >
@@ -353,7 +356,7 @@ export default function ParkinsonPredictor() {
                 </button>
                 <button
                   onClick={() => window.print()}
-                  className="group px-8 py-4 bg-blue-pink-gradient text-white font-semibold rounded-2xl 
+                  className="group px-8 py-4 bg-blue-pink-gradient text-white font-semibold rounded-3xl 
                              hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-blue-glow/50 
                              flex items-center gap-3"
                 >
@@ -367,7 +370,7 @@ export default function ParkinsonPredictor() {
 
         {/* Footer */}
         <footer className="mt-16 text-center">
-          <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
+          <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-6 border border-white/10">
             <p className="text-white/60 text-sm">
               © 2025 SnowFlake Research Laboratory • Advanced Healthcare
               Analytics •

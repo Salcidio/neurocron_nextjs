@@ -218,9 +218,9 @@ export default function ParkinsonsMRITool() {
 
     if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900  to-blue-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 flex items-center justify-center">
         <div className="text-white text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-400 mx-auto mb-4"></div>
           <p>Loading</p>
         </div>
       </div>
@@ -230,16 +230,16 @@ export default function ParkinsonsMRITool() {
     // Loading screen for signing out
   if (signingOut) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-1000 via-blue to-blue-800 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 flex items-center justify-center">
         <div className="text-white text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-400 mx-auto mb-4"></div>
           <p>Exiting...</p>
         </div>
       </div>
     );
   }
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 text-white ml-16">
       {/* Sidebar */}
       <Sidebar onSignOut={handleSignOut} />
       <Head>
@@ -251,7 +251,7 @@ export default function ParkinsonsMRITool() {
       </Head>
 
       {/* Header */}
-      <div className="flex  items-center justify-center bg-black/20 backdrop-blur-sm border-b border-blue-500/20">
+      <div className="flex items-center justify-center bg-white/10 backdrop-blur-xl border-b border-white/20 shadow-lg">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
@@ -275,7 +275,7 @@ export default function ParkinsonsMRITool() {
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Control Panel */}
-          <div className="bg-black/30 backdrop-blur-sm rounded-2xl border border-blue-500/20 p-6">
+          <div className="bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20 p-6 shadow-2xl transition-all duration-300">
             <h2 className="text-xl font-bold text-white mb-6 flex items-center">
               <Settings className="w-5 h-5 mr-2" />
               Generation Controls
@@ -289,7 +289,7 @@ export default function ParkinsonsMRITool() {
                 value={apiUrl}
                 onChange={(e) => setApiUrl(e.target.value)}
                 placeholder="Enter API URL"
-                className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:border-blue-400"
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white focus:border-blue-400 backdrop-blur-xl"
               />
             </div>
 
@@ -304,7 +304,7 @@ export default function ParkinsonsMRITool() {
                     className={`p-3 rounded-lg border transition-all ${
                       selectedStage === key
                         ? "border-blue-400 bg-blue-500/20 text-white"
-                        : "border-gray-600 bg-gray-800/50 text-gray-300 hover:bg-gray-700/50"
+                        : "border-white/10 bg-white/5 text-gray-300 hover:bg-white/10"
                     }`}
                   >
                     <div className="text-sm font-medium">{stage.label}</div>
@@ -325,7 +325,7 @@ export default function ParkinsonsMRITool() {
               <select
                 value={selectedView}
                 onChange={(e) => setSelectedView(e.target.value)}
-                className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:border-blue-400"
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white focus:border-blue-400 backdrop-blur-xl"
               >
                 {Object.entries(viewTypes).map(([key, label]) => (
                   <option key={key} value={key}>
@@ -344,7 +344,7 @@ export default function ParkinsonsMRITool() {
                 value={customPrompt}
                 onChange={(e) => setCustomPrompt(e.target.value)}
                 placeholder="Add specific details for generation..."
-                className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:border-blue-400 resize-none"
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white focus:border-blue-400 resize-none backdrop-blur-xl"
                 rows={3}
               />
             </div>
@@ -422,7 +422,7 @@ export default function ParkinsonsMRITool() {
           </div>
 
           {/* Generated Image Display */}
-          <div className="bg-black/30 backdrop-blur-sm rounded-2xl border border-blue-500/20 p-6">
+          <div className="bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20 p-6 shadow-2xl transition-all duration-300">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-white">Generated MRI</h2>
               {generatedImage && (
@@ -434,7 +434,7 @@ export default function ParkinsonsMRITool() {
               )}
             </div>
 
-            <div className="aspect-square bg-gray-900 rounded-lg border border-gray-700 flex items-center justify-center overflow-hidden">
+            <div className="aspect-square bg-white/5 backdrop-blur-xl rounded-lg border border-white/10 flex items-center justify-center overflow-hidden">
               {generatedImage ? (
                 <img
                   src={generatedImage}
@@ -454,7 +454,7 @@ export default function ParkinsonsMRITool() {
 
             {/* Current Stage Info */}
             {generatedImage && (
-              <div className="mt-4 p-4 bg-gray-800/50 rounded-lg">
+              <div className="mt-4 p-4 bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-medium text-white">
                     {diseaseStages[selectedStage].label}
@@ -474,7 +474,7 @@ export default function ParkinsonsMRITool() {
           </div>
 
           {/* Analysis Results */}
-          <div className="bg-black/30 backdrop-blur-sm rounded-2xl border border-blue-500/20 p-6">
+          <div className="bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20 p-6 shadow-2xl transition-all duration-300">
             <h2 className="text-xl font-bold text-white mb-6">AI Analysis</h2>
 
             {analysisResults ? (
@@ -489,7 +489,7 @@ export default function ParkinsonsMRITool() {
                         {analysisResults.substantiaNigraIntensity.toFixed(1)}%
                       </span>
                     </div>
-                    <div className="w-full bg-gray-700 rounded-full h-2">
+                    <div className="w-full bg-white/10 rounded-full h-2">
                       <div
                         className="bg-gradient-to-r from-green-500 to-red-500 h-2 rounded-full transition-all"
                         style={{
@@ -506,7 +506,7 @@ export default function ParkinsonsMRITool() {
                         {analysisResults.brainVolume.toFixed(0)} cm³
                       </span>
                     </div>
-                    <div className="w-full bg-gray-700 rounded-full h-2">
+                    <div className="w-full bg-white/10 rounded-full h-2">
                       <div
                         className="bg-blue-500 h-2 rounded-full transition-all"
                         style={{
@@ -525,7 +525,7 @@ export default function ParkinsonsMRITool() {
                         {analysisResults.asymmetryIndex.toFixed(2)}
                       </span>
                     </div>
-                    <div className="w-full bg-gray-700 rounded-full h-2">
+                    <div className="w-full bg-white/10 rounded-full h-2">
                       <div
                         className="bg-yellow-500 h-2 rounded-full transition-all"
                         style={{
@@ -536,7 +536,7 @@ export default function ParkinsonsMRITool() {
                   </div>
                 </div>
 
-                <div className="border-t border-gray-700 pt-4">
+                <div className="border-t border-white/10 pt-4">
                   <div className="flex items-center justify-between">
                     <span className="text-blue-300">Confidence Score</span>
                     <div className="flex items-center space-x-2">
@@ -571,7 +571,7 @@ export default function ParkinsonsMRITool() {
         </div>
 
         {/* Educational Info */}
-        <div className="mt-8 bg-black/30 backdrop-blur-sm rounded-2xl border border-blue-500/20 p-6">
+        <div className="mt-8 bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20 p-6 shadow-2xl transition-all duration-300">
           <h2 className="text-xl font-bold text-white mb-4">About This Tool</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-sm">
             <div>

@@ -810,9 +810,9 @@ const MRIReader = () => {
     // Loading screen
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900  to-blue-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 flex items-center justify-center">
         <div className="text-white text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-400 mx-auto mb-4"></div>
           <p>Loading</p>
         </div>
       </div>
@@ -821,9 +821,9 @@ const MRIReader = () => {
   // Loading screen for signing out
   if (signingOut) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-1000 via-blue to-blue-800 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 flex items-center justify-center">
         <div className="text-white text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-400 mx-auto mb-4"></div>
           <p>Exiting...</p>
         </div>
       </div>
@@ -833,7 +833,7 @@ const MRIReader = () => {
 
 
   return (
-    <div className="pl-15 min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white">
+    <div className="ml-16 min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 text-white">
       {/* Header - now specific to chat page actions */}
 
       {/* Sidebar */}
@@ -857,7 +857,7 @@ const MRIReader = () => {
 
       <div className="relative z-10">
         {/* Header */}
-        <header className="bg-slate-900/90 backdrop-blur-sm border-b border-blue-500/30 p-4">
+        <header className="bg-white/10 backdrop-blur-xl border-b border-white/20 shadow-lg p-4">
           <div className="flex items-center justify-center max-w-7xl mx-auto">
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
@@ -873,11 +873,11 @@ const MRIReader = () => {
 
         <div className="flex h-[calc(100vh-80px)]">
           {/* Left Sidebar - Tools */}
-          <div className="w-40 bg-slate-900/50 backdrop-blur-sm border-r border-blue-500/30 p-4 space-y-4">
+          <div className="w-40 bg-white/5 backdrop-blur-xl border-r border-white/10 p-4 space-y-4">
             <div className="flex space-x-2">
               <button
                 onClick={resetView}
-                className="flex-1 p-2 text-sm bg-slate-700 hover:bg-slate-600 rounded-lg border border-slate-600 transition-all duration-200"
+                className="flex-1 p-2 text-sm bg-white/10 hover:bg-white/20 rounded-lg border border-white/20 transition-all duration-200"
               >
                 Reset
               </button>
@@ -939,7 +939,7 @@ const MRIReader = () => {
           {/* Main Viewer */}
           <div className="flex-1 flex flex-col">
             {/* Viewer Controls */}
-            <div className="bg-slate-800/50 backdrop-blur-sm border-b border-blue-500/30 p-2">
+            <div className="bg-white/5 backdrop-blur-sm border-b border-white/10 p-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
                   {!dicomData ? (
@@ -1044,7 +1044,7 @@ const MRIReader = () => {
             {dicomData != null ? (
               <div
                 ref={viewerRef}
-                className="flex-1 relative bg-black overflow-hidden flex items-center justify-center"
+                className="flex-1 relative bg-black/40 backdrop-blur-sm shadow-inner overflow-hidden flex items-center justify-center border border-white/5"
               >
                 <canvas
                   ref={canvasRef}
@@ -1063,7 +1063,7 @@ const MRIReader = () => {
                 />
 
                 {/* Status Bar */}
-                <div className="absolute bottom-4 left-4 bg-slate-900/80 backdrop-blur-sm rounded-lg p-2 border border-blue-500/30">
+                <div className="absolute bottom-4 left-4 bg-white/10 backdrop-blur-xl rounded-xl p-3 border border-white/20 shadow-2xl">
                   <div className="text-xs space-y-1">
                     <div>
                       Mouse: ({mousePos.x}, {mousePos.y})
@@ -1073,7 +1073,7 @@ const MRIReader = () => {
                 </div>
               </div>
             ) : (
-              <div className="flex-1 relative bg-blue overflow-hidden flex items-center justify-center">
+              <div className="flex-1 relative bg-transparent overflow-hidden flex items-center justify-center">
                 <div
                   className="relative flex items-center justify-center h-full w-full" // Use h-full w-full to fill parent div
                 >
@@ -1109,7 +1109,7 @@ const MRIReader = () => {
           </div>
 
           {/* Right Sidebar - DICOM Info */}
-          <div className="w-50 bg-slate-900/50 backdrop-blur-sm border-l border-blue-500/30 p-4 space-y-4 overflow-y-auto">
+          <div className="w-50 bg-white/5 backdrop-blur-xl border-l border-white/10 p-4 space-y-4 overflow-y-auto">
             <h4 className="text-base font-semibold text-blue-300 flex items-center">
               <Info className="w-5 h-5 mr-2" />
               Meta-data
@@ -1124,7 +1124,7 @@ const MRIReader = () => {
                 return (
                   <div
                     key={key}
-                    className="bg-slate-800/50 rounded-lg p-3 border border-slate-600"
+                    className="bg-white/5 rounded-lg p-3 border border-white/10"
                   >
                     <div className="text-xs text-slate-400  uppercase tracking-wide">
                       {key.replace(/([A-Z])/g, " $1").trim()}
@@ -1141,14 +1141,14 @@ const MRIReader = () => {
                 Quick Stats
               </h4>
               <div className="grid grid-cols-2 gap-2">
-                <div className="bg-blue-600/20 rounded-lg p-2 text-center border border-blue-500/30">
+                <div className="bg-blue-500/10 rounded-lg p-2 text-center border border-blue-500/20 backdrop-blur-md">
                   <div className="text-lg font-bold text-blue-300">
                     {totalSlices}
                   </div>
                   <div className="text-xs text-slate-400">Slices</div>
                 </div>
                 {/* Matrix (rows x columns) can be kept as it's a useful summary, even if individual rows/columns are removed */}
-                <div className="bg-green-600/20 rounded-lg p-2 text-center border border-green-500/30">
+                <div className="bg-green-500/10 rounded-lg p-2 text-center border border-green-500/20 backdrop-blur-md">
                   <div className="text-lg font-bold text-green-300">
                     {dicomData?.metadata?.rows && dicomData?.metadata?.columns
                       ? `${dicomData.metadata.rows}x${dicomData.metadata.columns}`
@@ -1156,7 +1156,7 @@ const MRIReader = () => {
                   </div>
                   <div className="text-xs text-slate-400">Matrix</div>
                 </div>
-                <div className="bg-purple-600/20 rounded-lg p-2 text-center border border-purple-500/30">
+                <div className="bg-purple-500/10 rounded-lg p-2 text-center border border-purple-500/20 backdrop-blur-md">
                   <div className="text-lg font-bold text-purple-300">
                     {dicomData?.metadata?.magneticFieldStrength
                       ? `${parseFloat(
@@ -1166,7 +1166,7 @@ const MRIReader = () => {
                   </div>
                   <div className="text-xs text-slate-400">Field</div>
                 </div>
-                <div className="bg-cyan-600/20 rounded-lg p-2 text-center border border-cyan-500/30">
+                <div className="bg-cyan-500/10 rounded-lg p-2 text-center border border-cyan-500/20 backdrop-blur-md">
                   <div className="text-lg font-bold text-cyan-300">
                     {dicomData?.metadata?.modality || "N/A"}
                   </div>

@@ -41,7 +41,7 @@ export default function AuthComponent() {
   }, [router]);
 
   return (
-    <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-8 border border-white/20 shadow-2xl">
+    <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl">
       <Link href="/">
         <h2 className="text-2xl font-bold text-white text-center mb-6 cursor-pointer">
           <div className="flex justify-center items-center">

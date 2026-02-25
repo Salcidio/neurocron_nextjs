@@ -14,6 +14,7 @@ import {
   History,
   BrainCircuit,
   Star,
+  BarChart2,
 } from "lucide-react";
 import {
   Home as HomeFill,
@@ -30,19 +31,19 @@ export default function Sidebar({ onSignOut }) {
 
   return (
     <aside
-      className={`fixed top-0 left-0 h-screen bg-black/80 border-r border-blue-500/20 flex flex-col justify-between transition-all duration-500 ease-in-out overflow-hidden z-50 ${
+      className={`fixed top-0 left-0 h-screen bg-white/5 backdrop-blur-xl border-r border-white/10 flex flex-col justify-between transition-all duration-500 ease-in-out overflow-hidden z-50 ${
         collapsed ? "w-16" : "w-64"
-      }`}
+      } shadow-2xl`}
     >
       <div>
         <button
-          className="flex items-center justify-center w-full py-4 hover:bg-blue-900/20 transition cursor-pointer"
+          className="flex items-center justify-center w-full py-4 hover:bg-white/10 transition-colors cursor-pointer"
           onClick={() => setCollapsed((c) => !c)}
           aria-label="Toggle sidebar"
         >
           {collapsed ? (
             <Menu
-              className="text-blue-400 transition-all duration-300"
+              className="text-purple-400 transition-all duration-300"
               size={24}
             />
           ) : (
@@ -91,6 +92,13 @@ export default function Sidebar({ onSignOut }) {
             collapsed={collapsed}
             href="/lora"
           />
+          <SidebarItem
+            IconOutlined={BarChart2}
+            IconFilled={BarChart2}
+            label="Analysis"
+            collapsed={collapsed}
+            href="/analysis"
+          />
         </nav>
       </div>
 
@@ -131,7 +139,7 @@ function SidebarItem({ IconOutlined, IconFilled, label, collapsed, href }) {
   return (
     <Link
       href={href}
-      className="flex items-center gap-3 px-6 py-3 text-white hover:bg-blue-900/20 transition-all duration-300"
+      className="flex items-center gap-3 px-6 py-3 text-white hover:bg-white/10 hover:text-purple-300 transition-all duration-300 group"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >

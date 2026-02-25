@@ -101,7 +101,7 @@ const IntegratedFlakeHomePage = () => {
   ];
 
   return (
-    <div className="font-inter bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 min-h-screen text-white overflow-x-hidden">
+    <div className="font-inter bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 min-h-screen text-white overflow-x-hidden">
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
@@ -129,7 +129,7 @@ const IntegratedFlakeHomePage = () => {
       <header
         className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ease-in-out ${
           headerShrunk
-            ? "bg-black/80 backdrop-blur-lg shadow-lg py-3 border-b border-white/10"
+            ? "bg-white/10 backdrop-blur-xl shadow-lg py-3 border-b border-white/10"
             : "bg-transparent py-6"
         }`}
       >
@@ -152,7 +152,7 @@ const IntegratedFlakeHomePage = () => {
                       scrollToSection(
                         item.toLowerCase().replace(" ", "-") === "home"
                           ? "hero"
-                          : item.toLowerCase().replace(" ", "-")
+                          : item.toLowerCase().replace(" ", "-"),
                       )
                     }
                     className="text-gray-300 hover:text-white transition-all duration-200 relative group cursor-pointer"
@@ -161,7 +161,7 @@ const IntegratedFlakeHomePage = () => {
                     <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-400 to-cyan-400 transition-all duration-200 group-hover:w-full"></span>
                   </button>
                 </li>
-              )
+              ),
             )}
           </ul>
         </nav>
@@ -400,7 +400,7 @@ const IntegratedFlakeHomePage = () => {
         </div>
       </Section>
 
-      <footer className="py-12 bg-black/40 backdrop-blur-sm border-t border-white/10">
+      <footer className="py-12 bg-white/5 backdrop-blur-xl border-t border-white/10">
         <div className="container mx-auto px-6 text-center">
           <div className="flex items-center justify-center space-x-3 mb-4">
             <FaSnowflake className="w-8 h-8 text-purple-400" />
