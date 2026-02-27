@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { motion, useAnimation, useInView } from "framer-motion";
+import { motion } from "framer-motion";
 import Sidebar from "../../components/SideBar";
 import { supabase } from "../../lib/supabaseClient";
 import {
@@ -12,16 +12,21 @@ import {
   FaHeartbeat,
   FaBalanceScale,
   FaMicroscope,
+  FaExclamationTriangle,
+  FaCheckCircle,
+  FaShieldAlt,
 } from "react-icons/fa";
 import {
   ArrowLeft,
   Activity,
   Zap,
   TrendingDown,
+  TrendingUp,
   CircleDot,
   AlertTriangle,
   CheckCircle,
   Info,
+  Minus,
 } from "lucide-react";
 
 // ── Metro Line colors ──────────────────────────────────────────────────────
@@ -33,6 +38,7 @@ const COLORS = {
   orange: "#f97316",
   pink:   "#ec4899",
   white:  "#e2e8f0",
+  red:    "#f87171",
 };
 
 // ── Animated SVG Metro Line ───────────────────────────────────────────────
@@ -127,9 +133,8 @@ function MetroMap({ data }) {
     riskScore,
   } = data;
 
-  // SVG viewBox: 0 0 900 520
-  const cx = 450; // center x
-  const cy = 260; // center y
+  const cx = 450;
+  const cy = 260;
 
   return (
     <svg
@@ -165,7 +170,7 @@ function MetroMap({ data }) {
       {/* Purple branch → asymmetry */}
       <MetroLine d={`M${cx},${cy-100} L${cx+80},${cy-160} L${cx+80},${cy-210}`} color={COLORS.purple} strokeWidth={2} delay={0.8} />
 
-      {/* Green line → bottom left → progression */}
+      {/* Green line → bottom left → projection 1yr */}
       <MetroLine d={`M${cx},${cy} L${cx-80},${cy+100} L${cx-160},${cy+140} L${cx-220},${cy+180}`} color={COLORS.green} delay={0.7} />
       {/* Green branch 2yr */}
       <MetroLine d={`M${cx-160},${cy+140} L${cx-100},${cy+180} L${cx-60},${cy+220}`} color={COLORS.green} strokeWidth={2} delay={0.9} />
@@ -248,7 +253,7 @@ function MetroMap({ data }) {
       {/* Avg Uptake */}
       <SvgLabel x={cx+80} y={cy+236} text="AVG UPTAKE" subtext={`${avgUptake.toFixed(3)} SBR`} color={COLORS.pink} anchor="middle" delay={1.3} />
 
-      {/* Legend line top-left */}
+      {/* Legend */}
       <motion.text
         x={20} y={20}
         fill="#334155" fontSize="8" fontFamily="Inter, sans-serif"
@@ -325,30 +330,113 @@ function MetricCard({ label, value, unit, color, icon: Icon, barPercent, delay }
   );
 }
 
+// ── Mini Sparkline SVG ────────────────────────────────────────────────────
+function Sparkline({ data, color = COLORS.cyan, height = 56 }) {
+  if (!data || data.length < 2) return null;
+  const w = 300;
+  const h = height;
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const range = max - min || 1;
+  const pts = data.map((v, i) => {
+    const x = (i / (data.length - 1)) * w;
+    const y = h - ((v - min) / range) * (h - 8) - 4;
+    return `${x},${y}`;
+  });
+  const d = `M ${pts.join(" L ")}`;
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} className="w-full" style={{ height }}>
+      <defs>
+        <linearGradient id="spark-g" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.35" />
+          <stop offset="100%" stopColor={color} stopOpacity="0.0" />
+        </linearGradient>
+      </defs>
+      <path
+        d={`${d} L ${(data.length - 1) / (data.length - 1) * w},${h} L 0,${h} Z`}
+        fill="url(#spark-g)"
+      />
+      <path d={d} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round"
+        style={{ filter: `drop-shadow(0 0 4px ${color}88)` }} />
+    </svg>
+  );
+}
+
+// ── Derive analytics from predictions[] ──────────────────────────────────
+function deriveAnalytics(predictions) {
+  if (!predictions || predictions.length === 0) return null;
+  const n        = predictions.length;
+  const months   = n - 1;
+  const baseline = predictions[0];
+  const final    = predictions[n - 1];
+  const peak     = Math.max(...predictions);
+  const diffs    = predictions.slice(1).map((v, i) => v - predictions[i]);
+  const monthlyRate = months > 0 ? (final - baseline) / months : 0;
+  const diffs2   = diffs.slice(1).map((v, i) => v - diffs[i]);
+  const acceleration = diffs2.length > 0 ? diffs2.reduce((a, b) => a + b, 0) / diffs2.length : 0;
+  const idx12    = Math.min(12, n - 1);
+  const at12     = predictions[idx12];
+  const riskTier = at12 < 10 ? "Low" : at12 < 25 ? "Moderate" : "High";
+  const riskColor = at12 < 10 ? COLORS.green : at12 < 25 ? COLORS.yellow : COLORS.red;
+  const criticalMonth = predictions.findIndex((v) => v >= 20);
+  const severeMonth   = predictions.findIndex((v) => v >= 40);
+  return { n, months, baseline, final, peak, monthlyRate, acceleration, riskTier, riskColor, at12, criticalMonth, severeMonth, predictions };
+}
+
+// ── Rule-based clinical recommendations ──────────────────────────────────
+function getRecommendations(a) {
+  const recs = [];
+  if (a.riskTier === "High")
+    recs.push({ text: "High-risk trajectory — consider neurology referral and DBS evaluation.", color: COLORS.red, icon: AlertTriangle });
+  if (a.riskTier === "Moderate")
+    recs.push({ text: "Moderate progression — continue current therapy and reassess in 6 months.", color: COLORS.yellow, icon: Info });
+  if (a.riskTier === "Low")
+    recs.push({ text: "Low-risk trajectory — maintain current management and monitor annually.", color: COLORS.green, icon: CheckCircle });
+  if (a.monthlyRate > 0.6)
+    recs.push({ text: `Rapid progression (+${a.monthlyRate.toFixed(2)}/mo) — therapy intensification warranted.`, color: COLORS.orange, icon: AlertTriangle });
+  if (a.acceleration > 0.05)
+    recs.push({ text: "Disease is accelerating — more frequent follow-up recommended.", color: COLORS.orange, icon: AlertTriangle });
+  if (a.criticalMonth !== -1)
+    recs.push({ text: `Moderate threshold (≥20) projected at month ${a.criticalMonth}.`, color: COLORS.orange, icon: Info });
+  if (a.severeMonth !== -1)
+    recs.push({ text: `Severe threshold (≥40) projected at month ${a.severeMonth} — proactive care planning.`, color: COLORS.red, icon: AlertTriangle });
+  if (a.criticalMonth === -1)
+    recs.push({ text: "No threshold crossing within the prediction window — favorable outlook.", color: COLORS.green, icon: CheckCircle });
+  return recs;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 export default function AnalysisPage() {
   const router = useRouter();
   const [prediction, setPrediction] = useState(null);
+  const [analytics,  setAnalytics]  = useState(null);
+  const [bioFeatures, setBioFeatures] = useState(null);
   const [signingOut, setSigningOut] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading]       = useState(false);
 
-//   useEffect(() => {
-//     // Load user session
-//     const check = async () => {
-//       const { data: { session } } = await supabase.auth.getSession();
-//       if (!session) router.push("/");
-//       setLoading(false);
-//     };
-//     check();
-//     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => {
-//       if (!s) router.push("/");
-//     });
-//     return () => subscription.unsubscribe();
-//   }, [router]);
+  // useEffect(() => {
+  //   const check = async () => {
+  //     const { data: { session } } = await supabase.auth.getSession();
+  //     if (!session) router.push("/");
+  //     setLoading(false);
+  //   };
+  //   check();
+  //   const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => {
+  //     if (!s) router.push("/");
+  //   });
+  //   return () => subscription.unsubscribe();
+  // }, [router]);
 
   useEffect(() => {
     try {
       const stored = localStorage.getItem("neurocron_prediction");
-      if (stored) setPrediction(JSON.parse(stored));
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        setPrediction(parsed);
+        setAnalytics(deriveAnalytics(parsed.predictions));
+      }
+      const storedBio = localStorage.getItem("neurocron_bio_features");
+      if (storedBio) setBioFeatures(JSON.parse(storedBio));
     } catch (_) {}
   }, []);
 
@@ -372,18 +460,22 @@ export default function AnalysisPage() {
     </div>
   );
 
-  // ── Derived data ────────────────────────────────────────────────────────
-  const biomarkers = prediction?.predicted_biomarkers;
-  const caudateR   = biomarkers?.DATSCAN_CAUDATE_R ?? 2.8;
-  const caudateL   = biomarkers?.DATSCAN_CAUDATE_L ?? 2.6;
-  const putamenR   = biomarkers?.DATSCAN_PUTAMEN_R ?? 2.1;
-  const putamenL   = biomarkers?.DATSCAN_PUTAMEN_L ?? 1.9;
+  // ── DaTscan values — use real inputs if available, else sensible defaults
+  const caudateR  = bioFeatures?.datscan_right_caudate  ?? 2.8;
+  const caudateL  = bioFeatures?.datscan_left_caudate   ?? 2.6;
+  const putamenR  = bioFeatures?.datscan_right_putamen  ?? 2.1;
+  const putamenL  = bioFeatures?.datscan_left_putamen   ?? 1.9;
 
   const avgUptake     = (caudateR + caudateL + putamenR + putamenL) / 4;
   const asymmetry     = Math.abs(caudateR - caudateL) + Math.abs(putamenR - putamenL);
-  const projection1yr = avgUptake - 0.2;
-  const projection2yr = avgUptake - 0.5;
-  const riskScore     = Math.max(0, Math.min(100, (1 - avgUptake / 5) * 100));
+
+  // Contextual projections: if we have predictions, derive from them; else use biological approximation
+  const a = analytics;
+  const projection1yr = a ? (a.predictions[Math.min(12, a.n - 1)] / 100) : avgUptake - 0.2;
+  const projection2yr = a ? (a.predictions[Math.min(24, a.n - 1)] / 100) : avgUptake - 0.5;
+  const riskScore     = a
+    ? Math.max(0, Math.min(100, (a.at12 / 60) * 100))
+    : Math.max(0, Math.min(100, (1 - avgUptake / 5) * 100));
 
   let healthLevel, healthLabel, healthColor;
   if (avgUptake > 3.5) {
@@ -395,6 +487,8 @@ export default function AnalysisPage() {
   }
 
   const mapData = { caudateR, caudateL, putamenR, putamenL, avgUptake, asymmetry, projection1yr, projection2yr, riskScore, healthLevel, healthLabel, healthColor };
+
+  const recs = a ? getRecommendations(a) : [];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 text-white relative overflow-hidden">
@@ -447,42 +541,39 @@ export default function AnalysisPage() {
             )}
             <button
               onClick={() => {
-                if (prediction && biomarkers) {
+                if (prediction) {
                   const blob = new Blob([JSON.stringify(prediction, null, 2)], { type: "application/json" });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement("a"); a.href = url;
-                  a.download = "neuro_analysis.json"; a.click();
+                  const url  = URL.createObjectURL(blob);
+                  const el   = document.createElement("a"); el.href = url;
+                  el.download = "neuro_analysis.json"; el.click();
                 }
               }}
               className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-sm text-slate-300 hover:bg-white/10 transition-all cursor-pointer"
             >
-              <FaFileAlt size={12} />
-              Export
+              <FaFileAlt size={12} /> Export
             </button>
             <button
               onClick={() => router.push("/pd-predictor")}
               className="flex items-center gap-2 px-4 py-2 bg-cyan-500/10 border border-cyan-500/20 rounded-xl text-sm text-cyan-300 hover:bg-cyan-500/20 transition-all cursor-pointer"
             >
-              <FaRedoAlt size={12} />
-              New Analysis
+              <FaRedoAlt size={12} /> New Analysis
             </button>
           </div>
         </motion.header>
 
-        {/* Main grid */}
+        {/* ── Main 3-column grid (original layout) ── */}
         <div className="flex-1 grid grid-cols-12 gap-0 p-6 gap-6">
 
-          {/* LEFT PANEL — Metrics */}
+          {/* LEFT PANEL — DaTscan Metrics + Prediction Summary */}
           <motion.aside
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="col-span-3 flex flex-col gap-4 bg-white/10 backdrop-blur-xl rounded-3xl p-5 border border-white/20 shadow-2xl"
+            className="col-span-3 flex flex-col gap-4 bg-white/10 backdrop-blur-xl rounded-3xl p-5 border border-white/20 shadow-2xl overflow-y-auto"
           >
+            {/* DaTscan hemisphere metrics */}
             <div>
-              <p className="text-xs uppercase tracking-widest text-slate-500 mb-3">
-                Right Hemisphere
-              </p>
+              <p className="text-xs uppercase tracking-widest text-slate-500 mb-3">Right Hemisphere</p>
               <MetricCard label="Caudate R" value={caudateR} unit="SBR" color={COLORS.cyan} barPercent={caudateR / 5 * 100} delay={0.4} />
               <div className="mt-3">
                 <MetricCard label="Putamen R" value={putamenR} unit="SBR" color={COLORS.cyan} barPercent={putamenR / 5 * 100} delay={0.5} />
@@ -490,9 +581,7 @@ export default function AnalysisPage() {
             </div>
 
             <div className="border-t border-white/5 pt-4">
-              <p className="text-xs uppercase tracking-widest text-slate-500 mb-3">
-                Left Hemisphere
-              </p>
+              <p className="text-xs uppercase tracking-widest text-slate-500 mb-3">Left Hemisphere</p>
               <MetricCard label="Caudate L" value={caudateL} unit="SBR" color={COLORS.yellow} barPercent={caudateL / 5 * 100} delay={0.6} />
               <div className="mt-3">
                 <MetricCard label="Putamen L" value={putamenL} unit="SBR" color={COLORS.yellow} barPercent={putamenL / 5 * 100} delay={0.7} />
@@ -509,17 +598,27 @@ export default function AnalysisPage() {
               <MetricCard label="Asymmetry Index" value={asymmetry} unit="" color={COLORS.purple} barPercent={asymmetry * 10} delay={1.1} />
               <MetricCard label="Risk Score" value={riskScore.toFixed(1)} unit="%" color={COLORS.orange} barPercent={riskScore} delay={1.2} />
             </div>
+
+            {/* ── Prediction summary (only when data present) ── */}
+            {a && (
+              <div className="border-t border-white/5 pt-4 space-y-3">
+                <p className="text-xs uppercase tracking-widest text-slate-500">Progression Model</p>
+                <MetricCard label="Baseline UPDRS" value={a.baseline.toFixed(2)} unit="" color={COLORS.cyan} delay={1.3} />
+                <MetricCard label={`Final (${a.months}m)`} value={a.final.toFixed(2)} unit="" color={COLORS.purple} barPercent={(a.final / 60) * 100} delay={1.4} />
+                <MetricCard label="Monthly Rate" value={`+${a.monthlyRate.toFixed(3)}`} unit="/mo" color={COLORS.yellow} delay={1.5} />
+              </div>
+            )}
           </motion.aside>
 
-          {/* CENTER — Metro Map */}
+          {/* CENTER — Metro Map + sparkline */}
           <motion.main
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.1 }}
-            className="col-span-6 flex flex-col"
+            className="col-span-6 flex flex-col gap-4"
           >
             {/* Title band */}
-            <div className="mb-4 flex items-center gap-3">
+            <div className="flex items-center gap-3">
               <div className="h-px flex-1 bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent" />
               <span className="text-xs uppercase tracking-widest text-slate-500 font-semibold">
                 Dopaminergic Connectivity Map
@@ -528,22 +627,60 @@ export default function AnalysisPage() {
             </div>
 
             {/* SVG container */}
-            <div className="flex-1 bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 shadow-2xl p-4 min-h-[440px] relative overflow-hidden">
+            <div className="flex-1 bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 shadow-2xl p-4 min-h-[380px] relative overflow-hidden">
               {/* Corner accents */}
               <div className="absolute top-0 left-0 w-16 h-16 border-l-2 border-t-2 border-cyan-500/20 rounded-tl-2xl" />
               <div className="absolute top-0 right-0 w-16 h-16 border-r-2 border-t-2 border-purple-500/20 rounded-tr-2xl" />
               <div className="absolute bottom-0 left-0 w-16 h-16 border-l-2 border-b-2 border-yellow-500/20 rounded-bl-2xl" />
               <div className="absolute bottom-0 right-0 w-16 h-16 border-r-2 border-b-2 border-orange-500/20 rounded-br-2xl" />
-
               <MetroMap data={mapData} />
             </div>
+
+            {/* ── Predictions Sparkline (only when data present) ── */}
+            {a && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.8, duration: 0.5 }}
+                className="bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 shadow-2xl p-5"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs uppercase tracking-widest text-slate-500 font-semibold">
+                    UPDRS Progression Forecast · {a.months} months
+                  </span>
+                  <div className="flex items-center gap-4 text-xs text-slate-500">
+                    <span>Start: <span className="text-cyan-400 font-bold">{a.baseline.toFixed(1)}</span></span>
+                    <span>Peak: <span className="text-orange-400 font-bold">{a.peak.toFixed(1)}</span></span>
+                    <span>End: <span className="text-purple-400 font-bold">{a.final.toFixed(1)}</span></span>
+                  </div>
+                </div>
+                <Sparkline data={a.predictions} color={COLORS.cyan} height={64} />
+                {/* Threshold markers legend */}
+                <div className="flex gap-6 mt-2 text-xs text-slate-500">
+                  <div className="flex items-center gap-1">
+                    <div className="w-4 h-0.5 bg-yellow-400" />
+                    <span>Moderate ≥20</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div className="w-4 h-0.5 bg-red-400" />
+                    <span>Severe ≥40</span>
+                  </div>
+                  {a.criticalMonth !== -1 && (
+                    <span className="text-yellow-400">Moderate at m{a.criticalMonth}</span>
+                  )}
+                  {a.severeMonth !== -1 && (
+                    <span className="text-red-400">Severe at m{a.severeMonth}</span>
+                  )}
+                </div>
+              </motion.div>
+            )}
 
             {/* Legend row */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 2, duration: 0.5 }}
-              className="mt-4 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-500"
+              className="flex flex-wrap items-center justify-center gap-6 text-xs text-slate-500"
             >
               {[
                 { color: COLORS.cyan,   label: "Caudate" },
@@ -561,36 +698,89 @@ export default function AnalysisPage() {
             </motion.div>
           </motion.main>
 
-          {/* RIGHT PANEL — Projections & info */}
+          {/* RIGHT PANEL — Contextual Projections + Clinical Recommendations */}
           <motion.aside
             initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="col-span-3 flex flex-col gap-4 bg-white/10 backdrop-blur-xl rounded-3xl p-5 border border-white/20 shadow-2xl"
+            className="col-span-3 flex flex-col gap-4 bg-white/10 backdrop-blur-xl rounded-3xl p-5 border border-white/20 shadow-2xl overflow-y-auto"
           >
+            {/* Progression Projections */}
             <div>
               <p className="text-xs uppercase tracking-widest text-slate-500 mb-3">
                 Progression Projections
               </p>
               <MetricCard label="Baseline Avg" value={avgUptake} unit="SBR" color={COLORS.white} delay={0.8} />
               <div className="mt-3">
-                <MetricCard label="+1 Year Projection" value={projection1yr} unit="SBR" color={COLORS.green} barPercent={projection1yr / 5 * 100} delay={0.9} />
+                <MetricCard label="+1 Year Projection" value={projection1yr} unit={a ? "UPDRS" : "SBR"} color={COLORS.green} barPercent={projection1yr / (a ? 60 : 5) * 100} delay={0.9} />
               </div>
               <div className="mt-3">
-                <MetricCard label="+2 Year Projection" value={projection2yr} unit="SBR" color={COLORS.green} barPercent={projection2yr / 5 * 100} delay={1.0} />
+                <MetricCard label="+2 Year Projection" value={projection2yr} unit={a ? "UPDRS" : "SBR"} color={COLORS.green} barPercent={projection2yr / (a ? 60 : 5) * 100} delay={1.0} />
               </div>
             </div>
 
-            {/* Clinical Notes */}
-            <div className="border-t border-white/5 pt-4 space-y-3">
-              <p className="text-xs uppercase tracking-widest text-slate-500 mb-3">
-                Clinical Context
-              </p>
+            {/* Risk Classification Badge */}
+            {a && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 1.2, duration: 0.4 }}
+                className="rounded-2xl p-4 text-center border"
+                style={{
+                  backgroundColor: `${a.riskColor}18`,
+                  borderColor: `${a.riskColor}44`,
+                  color: a.riskColor,
+                }}
+              >
+                <FaShieldAlt className="text-2xl mx-auto mb-2" />
+                <p className="font-bold text-lg">{a.riskTier} Risk</p>
+                <p className="text-xs text-slate-400 mt-1">
+                  Score at 12 m: <span className="font-semibold text-white">{a.at12.toFixed(1)}</span>
+                </p>
+                <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                  {a.riskTier === "Low"      && "Below 10 — benign early trajectory."}
+                  {a.riskTier === "Moderate" && "10–25 — moderate impact, monitor closely."}
+                  {a.riskTier === "High"     && "Above 25 — significant impairment projected."}
+                </p>
+              </motion.div>
+            )}
 
+            {/* Clinical Recommendations — rule-based */}
+            {a && recs.length > 0 && (
+              <div className="border-t border-white/5 pt-4 space-y-3">
+                <p className="text-xs uppercase tracking-widest text-slate-500 mb-3">
+                  Clinical Recommendations
+                </p>
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 1.4 }}
+                  className="space-y-2"
+                >
+                  {recs.map(({ text, color, icon: Icon }, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 1.4 + i * 0.12 }}
+                      className="flex gap-3 p-3 rounded-xl"
+                      style={{ backgroundColor: `${color}12`, border: `1px solid ${color}30` }}
+                    >
+                      <Icon size={13} style={{ color }} className="mt-0.5 flex-shrink-0" />
+                      <p className="text-xs text-slate-300 leading-relaxed">{text}</p>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              </div>
+            )}
+
+            {/* Static clinical context (always visible) */}
+            <div className="border-t border-white/5 pt-4 space-y-3">
+              <p className="text-xs uppercase tracking-widest text-slate-500 mb-3">Clinical Context</p>
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 1.4 }}
+                transition={{ delay: a ? 2.0 : 1.4 }}
                 className="space-y-3"
               >
                 {[
@@ -610,7 +800,7 @@ export default function AnalysisPage() {
                     icon: TrendingDown,
                     color: COLORS.orange,
                     title: "Progression Model",
-                    desc: "Linear approximation of dopaminergic decline over time based on current biomarkers.",
+                    desc: "LSSM-predicted UPDRS trajectory. Higher values indicate more severe motor impairment.",
                   },
                   {
                     icon: Info,
@@ -618,12 +808,9 @@ export default function AnalysisPage() {
                     title: "Research Use Only",
                     desc: "This tool is for research and educational purposes. Not for clinical diagnosis.",
                   },
-                ].map(({ icon: Icon, color, title, desc }, i) => (
-                  <motion.div
+                ].map(({ icon: Icon, color, title, desc }) => (
+                  <div
                     key={title}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 1.4 + i * 0.15 }}
                     className="flex gap-3 p-3 rounded-xl bg-white/3 border border-white/5"
                   >
                     <Icon size={14} style={{ color }} className="mt-0.5 flex-shrink-0" />
@@ -631,7 +818,7 @@ export default function AnalysisPage() {
                       <p className="text-xs font-semibold text-slate-300 mb-1">{title}</p>
                       <p className="text-xs text-slate-500 leading-relaxed">{desc}</p>
                     </div>
-                  </motion.div>
+                  </div>
                 ))}
               </motion.div>
             </div>

@@ -85,10 +85,12 @@ export default function ParkinsonPredictor() {
     setError(null);
     setTimeout(() => {
       try {
-        // Handle both /predict and /predict/files responses
-        const predictionData =
-          data.source === "files" ? data.predictions[0] : data;
-        if (!predictionData.predicted_biomarkers) {
+        // Support both the new { predictions: [...] } shape and legacy formats
+        let predictionData = data;
+        if (data.source === "files" && Array.isArray(data.predictions)) {
+          predictionData = data.predictions[0];
+        }
+        if (!predictionData || (!predictionData.predictions && !predictionData.predicted_biomarkers)) {
           throw new Error("Invalid prediction data received.");
         }
         // Store in localStorage so the analysis page can read it
@@ -97,7 +99,7 @@ export default function ParkinsonPredictor() {
         router.push("/analysis");
       } catch (err) {
         console.error("Error processing prediction:", err);
-        setError("Failed to process prediction. Please try again.");
+        setError("Failed to process prediction — check the endpoint and try again.");
       } finally {
         setIsAnalyzing(false);
       }
