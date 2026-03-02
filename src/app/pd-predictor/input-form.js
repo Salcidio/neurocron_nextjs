@@ -139,9 +139,7 @@ export default function InputForm({ onSubmit, onReset }) {
       }));
       localStorage.setItem("neurocron_months", String(months));
 
-      const payload = { 
-        body: { motor_features, non_motor_features, biological_features, months } 
-      };
+      const payload = { motor_features, non_motor_features, biological_features, months };
       const data = await submitPrediction(endpoint.trim(), payload);
       onSubmit(data);
     } catch (err) {
