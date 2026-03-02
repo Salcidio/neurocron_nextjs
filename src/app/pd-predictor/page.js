@@ -35,35 +35,35 @@ export default function ParkinsonPredictor() {
   // Reset form callback for InputForm
   const [resetForm, setResetForm] = useState(() => () => {});
 
-  // // auth section --snowflake
-  // useEffect(() => {
-  //   const checkAuth = async () => {
-  //     const {
-  //       data: { session },
-  //     } = await supabase.auth.getSession();
+  // auth section --snowflake
+  useEffect(() => {
+    const checkAuth = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
-  //     if (!session) {
-  //       router.push("/"); // not logged in → redirect to root
-  //     } else {
-  //       setUser(session.user);
-  //     }
-  //     setLoading(false);
-  //   };
+      if (!session) {
+        router.push("/"); // not logged in → redirect to root
+      } else {
+        setUser(session.user);
+      }
+      setLoading(false);
+    };
 
-  //   checkAuth();
+    checkAuth();
 
-  //   const {
-  //     data: { subscription },
-  //   } = supabase.auth.onAuthStateChange((_event, session) => {
-  //     if (!session) {
-  //       router.push("/");
-  //     } else {
-  //       setUser(session.user);
-  //     }
-  //   });
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        router.push("/");
+      } else {
+        setUser(session.user);
+      }
+    });
 
-  //   return () => subscription.unsubscribe();
-  // }, [router]);
+    return () => subscription.unsubscribe();
+  }, [router]);
 
   const handleSignOut = async () => {
     setSigningOut(true);
