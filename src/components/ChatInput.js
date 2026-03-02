@@ -7,7 +7,6 @@ import {
   Lightbulb, // Creative AI icon
   FlaskConical, // Factual AI icon
   Code, // Technical AI icon
-  Mic, // Microphone icon
 } from "lucide-react"; // Import necessary icons
 
 export default function ChatInput({ onSendMessage, isLoading }) {
@@ -104,19 +103,14 @@ export default function ChatInput({ onSendMessage, isLoading }) {
           <button
             type="submit"
             disabled={!inputValue.trim() || isLoading}
-            className="p-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 "
+            className={`p-2 rounded-full transition-colors duration-200 ${
+              inputValue.trim() && !isLoading 
+               ? "bg-[#4fc3f7] text-white shadow-lg shadow-[#4fc3f7]/30 hover:bg-[#29b6f6]" 
+               : "bg-white/10 text-white/30 cursor-not-allowed"
+            }`}
             aria-label="Send message"
           >
             <ArrowUp size={20} />
-          </button>
-
-          {/* Microphone Icon */}
-          <button
-            type="button"
-            className="p-2 rounded-full text-zinc-400 hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-600 transition-colors duration-200 "
-            aria-label="Voice input"
-          >
-            <Mic size={20} /> {/* Using the imported Mic icon */}
           </button>
         </form>
       </div>

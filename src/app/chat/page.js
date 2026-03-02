@@ -14,12 +14,13 @@ import {
   Brain,
   MessageCircle,
   Zap,
+  Sparkles,
   MessageSquarePlus,
 } from "lucide-react";
 
 export default function ChatPage() {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -28,7 +29,7 @@ export default function ChatPage() {
   const [signingOut, setSigningOut] = useState(false);
   const router = useRouter();
 
-  // auth section --snowflake
+  auth section --snowflake
   useEffect(() => {
     const checkAuth = async () => {
       const {

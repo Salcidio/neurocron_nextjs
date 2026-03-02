@@ -86,13 +86,6 @@ export default function Sidebar({ onSignOut }) {
             href="/mri"
           />
           <SidebarItem
-            IconOutlined={Star}
-            IconFilled={StarFill}
-            label="Flake"
-            collapsed={collapsed}
-            href="/lora"
-          />
-          <SidebarItem
             IconOutlined={BarChart2}
             IconFilled={BarChart2}
             label="Analysis"
