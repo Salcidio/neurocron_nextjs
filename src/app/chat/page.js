@@ -72,11 +72,11 @@ export default function ChatPage() {
     }
   };
 
-//end auth section --snowflake
+  //end auth section --snowflake
 
-  // Backend API URL
+  // Backend API URL------------------------------------------------------||
   const API_BASE_URL = "https://neurocron-render.onrender.com";
-
+  //------------------------------------------------------------------------||
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -155,7 +155,7 @@ export default function ChatPage() {
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(
-          errorData.response || "Failed to fetch response from AI."
+          errorData.response || "Failed to fetch response from AI.",
         );
       }
 
@@ -191,7 +191,7 @@ export default function ChatPage() {
     setShowWelcome(true); // Shows the welcome screen again
   };
 
-    // Loading screen
+  // Loading screen
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 flex items-center justify-center">

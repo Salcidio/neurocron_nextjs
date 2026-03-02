@@ -471,8 +471,8 @@ export default function AnalysisPage() {
 
   // Contextual projections: if we have predictions, derive from them; else use biological approximation
   const a = analytics;
-  const projection1yr = a ? (a.predictions[Math.min(12, a.n - 1)] / 100) : avgUptake - 0.2;
-  const projection2yr = a ? (a.predictions[Math.min(24, a.n - 1)] / 100) : avgUptake - 0.5;
+  const projection1yr = a ? a.predictions[Math.min(12, a.n - 1)] : avgUptake - 0.2;
+  const projection2yr = a ? a.predictions[Math.min(24, a.n - 1)] : avgUptake - 0.5;
   const riskScore     = a
     ? Math.max(0, Math.min(100, (a.at12 / 60) * 100))
     : Math.max(0, Math.min(100, (1 - avgUptake / 5) * 100));
