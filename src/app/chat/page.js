@@ -29,7 +29,6 @@ export default function ChatPage() {
   const [signingOut, setSigningOut] = useState(false);
   const router = useRouter();
 
-  auth section --snowflake
   useEffect(() => {
     const checkAuth = async () => {
       const {
