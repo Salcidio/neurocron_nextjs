@@ -324,18 +324,18 @@ export default function AnalysisPage() {
   const [signingOut,   setSigningOut]   = useState(false);
   const [loading,      setLoading]      = useState(false);
 
-  // useEffect(() => {
-  //   const check = async () => {
-  //     const { data: { session } } = await supabase.auth.getSession();
-  //     if (!session) router.push("/");
-  //     setLoading(false);
-  //   };
-  //   check();
-  //   const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => {
-  //     if (!s) router.push("/");
-  //   });
-  //   return () => subscription.unsubscribe();
-  // }, [router]);
+  useEffect(() => {
+    const check = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) router.push("/");
+      setLoading(false);
+    };
+    check();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => {
+      if (!s) router.push("/");
+    });
+    return () => subscription.unsubscribe();
+  }, [router]);
 
   useEffect(() => {
     try {

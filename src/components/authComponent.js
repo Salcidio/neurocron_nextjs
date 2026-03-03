@@ -32,7 +32,7 @@ export default function AuthComponent() {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (session) {
-        router.push("/lora");
+        router.push("/chat");
       }
     });
 
