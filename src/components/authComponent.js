@@ -14,7 +14,7 @@ export default function AuthComponent() {
 
   // Initialize redirectTo safely on first render
   const redirectTo =
-    typeof window !== "undefined" ? window.location.origin + "/lora" : null;
+    typeof window !== "undefined" ? window.location.origin + "/chat" : null;
 
   useEffect(() => {
     // Check for active session
