@@ -35,7 +35,7 @@ export default function ParkinsonPredictor() {
   // Reset form callback for InputForm
   const [resetForm, setResetForm] = useState(() => () => {});
 
- auth section --snowflake
+ //auth section --snowflake
   useEffect(() => {
     const checkAuth = async () => {
       const {
