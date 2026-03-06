@@ -96,20 +96,7 @@ export default function Sidebar({ onSignOut }) {
       </div>
 
       <div className="flex flex-col gap-2 mb-6">
-        <SidebarItem
-          IconOutlined={User}
-          IconFilled={UserFill}
-          label="Profile"
-          collapsed={collapsed}
-          href="/profile"
-        />
-        <SidebarItem
-          IconOutlined={Settings}
-          IconFilled={SettingsFill}
-          label="Settings"
-          collapsed={collapsed}
-          href="/settings"
-        />
+   
         <button
           onClick={onSignOut}
           className="flex items-center gap-3 px-6 py-3 text-red-400 hover:bg-red-900/20 transition w-full"

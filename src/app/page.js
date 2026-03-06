@@ -15,6 +15,7 @@ import {
 import { FaSnowflake, FaDocker, FaReact } from "react-icons/fa";
 import { SiHuggingface } from "react-icons/si";
 import { TbBrandSupabase } from "react-icons/tb";
+import VoiceCommand from "@/components/VoiceCommand";
 
 const scrollToSection = (id) => {
   const element = document.getElementById(id);
