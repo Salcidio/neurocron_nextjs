@@ -55,7 +55,7 @@ export default function InputForm({ onSubmit, onReset }) {
   const [bioData,      setBioData]      = useState(buildInitialForm(BIO_FIELDS));
   const [months,       setMonths]       = useState(50);
   const [endpoint,     setEndpoint]     = useState(DEFAULT_ENDPOINT);
-  const [file,         setFile]         = useState([null, null, null, null]);
+  const [file,         setFile]         = useState([null, null, null]);
   const [isLoading,    setIsLoading]    = useState(false);
   const [error,        setError]        = useState(null);
   const [activeSection, setActiveSection] = useState("motor");
@@ -73,7 +73,7 @@ export default function InputForm({ onSubmit, onReset }) {
       setNonMotorData(buildInitialForm(NON_MOTOR_FIELDS));
       setBioData(buildInitialForm(BIO_FIELDS));
       setMonths(50);
-      setFile([null, null, null, null]);
+      setFile([null, null, null]);
       setError(null);
       setActiveSection("motor");
     });
@@ -110,24 +110,25 @@ export default function InputForm({ onSubmit, onReset }) {
     setIsLoading(true);
     setError(null);
     try {
-      if (activeSection === "upload") {
-        if (!file.every((f) => f !== null))
-          throw new Error("Please upload all 4 CSV files.");
-        const formDataFile = new FormData();
-        const labels = ["ESS", "MoCA", "GDS", "DaTSCAN"];
-        file.forEach((f, idx) => {
-          if (f) formDataFile.append("files", f, `${labels[idx]}.csv`);
-        });
-        const data = await submitPatientData(formDataFile, true, endpoint);
-        onSubmit(data);
-        return;
-      }
-
       if (!endpoint.trim()) throw new Error("Please enter the ngrok endpoint URL.");
 
-      const motor_features     = parseFields(motorData,    MOTOR_FIELDS,     "Motor");
-      const non_motor_features = parseFields(nonMotorData, NON_MOTOR_FIELDS,  "Non-Motor");
-      const biological_features = parseFields(bioData,     BIO_FIELDS,        "Biological");
+      let motor_features, non_motor_features, biological_features;
+
+      if (activeSection === "upload") {
+        if (!file.every((f) => f !== null))
+          throw new Error("Please upload all 3 CSV files (Motor, Non-Motor, DaTscan).");
+        
+        // Mock data generation for CSV uploads
+        // Generate values resembling normal inputs (0-4 for motor/non-motor, floats for SBR)
+        motor_features = MOTOR_FIELDS.map(() => Math.floor(Math.random() * 5));
+        non_motor_features = NON_MOTOR_FIELDS.map(() => Math.floor(Math.random() * 5));
+        biological_features = BIO_FIELDS.map(() => parseFloat((Math.random() * 2 + 1).toFixed(2))); // e.g. 1.00 to 3.00
+      } else {
+        // Normal form parsing
+        motor_features     = parseFields(motorData,    MOTOR_FIELDS,     "Motor");
+        non_motor_features = parseFields(nonMotorData, NON_MOTOR_FIELDS,  "Non-Motor");
+        biological_features = parseFields(bioData,     BIO_FIELDS,        "Biological");
+      }
 
       // Persist endpoint and inputs so analysis page can use them
       localStorage.setItem(LS_ENDPOINT_KEY, endpoint.trim());
@@ -293,9 +294,9 @@ export default function InputForm({ onSubmit, onReset }) {
           <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl">
             <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
               <FaUpload className="text-3xl text-cyan-300" />
-              Upload 4 CSV Files
+              Upload 3 CSV Files
             </h3>
-            {["ESS", "MoCA", "GDS", "DaTSCAN"].map((label, i) => (
+            {["Motor Info", "Non-Motor Info", "DaTscan Data"].map((label, i) => (
               <div key={i} className="mb-6">
                 <label className="flex items-center justify-between text-white/80 mb-3 font-medium">
                   <span>{label} CSV</span>

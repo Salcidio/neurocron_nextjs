@@ -313,7 +313,7 @@ const MRIReader = () => {
     ctx.translate(dx,dy);
     ctx.scale(zoom/100,zoom/100);
     ctx.imageSmoothingEnabled=false;
-    ctx.drawImage(ic,0,0,cw,ch);
+    ctx.drawImage(ic, -cw/2, -ch/2, cw, ch);
     ctx.restore();
 
     if (showGrid) {
